@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(corepack enable *)",
+      "Bash(corepack prepare *)",
+      "Bash(pnpm --version)",
+      "Bash(echo \"pnpm: $\\(pnpm --version 2>&1\\)\")",
+      "Bash(git init *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git config *)",
+      "Bash(npm install *)"
+    ]
+  }
+}
