@@ -46,7 +46,7 @@ export class AuthService {
       password,
       user?.passwordHash ?? "$2b$12$invalidinvalidinvalidinvalidinvalidinvalidinv",
     );
-    if (!user || !ok) throw new UnauthorizedException("Invalid credentials");
+    if (!user?.passwordHash || !ok) throw new UnauthorizedException("Invalid credentials");
     return this.issueTokens(user);
   }
 
@@ -84,6 +84,12 @@ export class AuthService {
     const doc = await this.refreshTokens.findOne({ jti }).exec();
     if (!doc || !(await bcrypt.compare(secret, doc.tokenHash))) return;
     await this.refreshTokens.updateOne({ _id: doc._id, revoked: false }, { $set: { revoked: true } }).exec();
+  }
+
+  async issueForUserId(userId: string): Promise<AuthResponse> {
+    const user = await this.users.findById(userId);
+    if (!user) throw new UnauthorizedException("User no longer exists");
+    return this.issueTokens(user);
   }
 
   // --- internals ---

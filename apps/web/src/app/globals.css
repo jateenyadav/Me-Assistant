@@ -34,6 +34,17 @@ body {
   padding: 28px;
 }
 
+.auth-stack {
+  width: 100%;
+  max-width: 380px;
+}
+
+.google-button {
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
 h1 {
   margin: 0 0 4px;
   font-size: 22px;
@@ -93,4 +104,84 @@ button:disabled {
 
 a {
   color: var(--accent);
+}
+
+.dashboard-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.dashboard-shell .card {
+  max-width: none;
+  margin-bottom: 20px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dashboard-header div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dashboard-header .muted {
+  margin: 0;
+}
+
+.dashboard-header button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.finance-card h2 {
+  margin: 0 0 8px;
+}
+
+.finance-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.finance-card select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.finance-list {
+  padding: 0;
+  margin: 24px 0 0;
+  list-style: none;
+}
+
+.finance-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+
+.finance-list li span {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.finance-list .expense { color: #ff9292; }
+.finance-list .income { color: #81d9a6; }
+
+@media (max-width: 640px) {
+  .finance-fields { grid-template-columns: 1fr; gap: 0; }
+  .dashboard-header { flex-wrap: wrap; }
 }

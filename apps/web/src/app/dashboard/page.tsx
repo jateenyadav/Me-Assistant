@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PublicUser } from "@lifeos/shared";
 import { logout, me } from "@/lib/auth";
+import { FinancePanel } from "@/components/FinancePanel";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -40,18 +41,15 @@ export default function DashboardPage() {
     );
   }
 
+  if (!user) return null;
+
   return (
-    <div className="center">
-      <div className="card">
+    <main className="dashboard-shell">
+      <header className="card dashboard-header">
         <h1>LifeOS</h1>
-        <p className="muted">Foundation is live. Modules land in the phases ahead.</p>
-        <p>
-          Signed in as <strong>{user?.email}</strong>
-          <br />
-          <span className="muted">role: {user?.role}</span>
-        </p>
-        <button onClick={onLogout}>Log out</button>
-      </div>
-    </div>
+        <div><span className="muted">{user.email}</span><button onClick={onLogout}>Log out</button></div>
+      </header>
+      <FinancePanel />
+    </main>
   );
 }

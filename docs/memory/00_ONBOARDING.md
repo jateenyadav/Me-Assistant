@@ -11,9 +11,10 @@ MongoDB Atlas + Redis + a vector store (notes only).
 
 ## Why this project exists
 The user is a ~3-yr engineer using LifeOS to master **end-to-end system design** for
-interviews. Therefore every task has **two deliverables**: working code **and** the concept
-behind it. The `04_LEARNING_LOG.md` is the primary artifact this project produces — treat
-it as first-class.
+interviews. The project has **two deliverables**: working code **and** the concept
+behind it. **Owner update (2026-09-23):** develop now and do the learning walkthrough
+at the end. Record pending concepts as code is built; do not claim they were taught
+or gate implementation on teach-back. Treat `04_LEARNING_LOG.md` as first-class.
 
 ## Session START protocol (every session, no exceptions)
 1. Read this file, then what it points to for today's task — at minimum
@@ -30,21 +31,22 @@ it as first-class.
 5. Check off [06_ROADMAP.md](06_ROADMAP.md); draft resume bullets in `03_PROGRESS.md`.
 6. Tell the user to commit.
 
-## Teach-while-building protocol
-First time any concept appears (JWT rotation, caching, queues, MCP, webhooks, …), stop and
-cover briefly: **what it is & why here**, **2–3 alternatives + trade-offs**, **what changes
-at 100k users**, **the interview angle**. Then append a short entry to `04_LEARNING_LOG.md`
-tagged to the commit/feature. A log entry is not evidence the user learned the concept:
-if they ask for an explanation, teach it again from the beginning.
+## Learning backlog protocol (deferred at owner's request)
+Build vertical slices now. For each new concept (JWT rotation, money representation,
+queues, MCP, …), record what to teach and where in `04_LEARNING_LOG.md`, marked
+**pending lesson**. In the final learning phase cover what it is & why here,
+2–3 alternatives + trade-offs, what changes at 100k users, and the interview angle.
+Do not mark a concept taught or understood because it was implemented or logged.
 
-**Beginner-first rule (owner request, 2026-09-23):** Before implementing a new slice,
-teach the process in chat in plain language, using an example from this repo. Trace one
+**Beginner-first lesson format (for when lessons resume):** Teach the process in
+chat in plain language, using an example from this repo. Trace one
 real request through the UI → HTTP endpoint → validation → service → database → response;
 explain vocabulary and where code/config lives; give a safe hands-on check. Then cover
 alternatives and trade-offs, what changes at 100k users, and an interview question with
 its answer. Pause at a comprehension checkpoint before jumping into the next major
 concept; don't substitute a documentation update or a feature summary for teaching.
 Mark the teaching checkpoint in the roadmap only once it has actually happened.
+The owner's newer development-first request defers this format, not its content.
 
 ## The memory bank
 - [01_ARCHITECTURE.md](01_ARCHITECTURE.md) — system design, stack + why, folder layout, data models

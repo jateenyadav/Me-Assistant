@@ -51,7 +51,10 @@ observability (structured logs, error tracking).
 
 ## Learning experience (non-negotiable)
 - This project is the owner's end-to-end system-design/interview course, not just an app.
-- Teach every process as a beginner would learn it, in chat before moving on: what an
+- **Current pacing (owner update 2026-09-23): develop first; save the learning
+  walkthrough for the end.** Do not interrupt each slice for a comprehension check.
+  Keep pending lessons and design decisions documented so none are lost.
+- At the end, teach every process as a beginner would learn it, in chat: what an
   API/database/auth mechanism is, how to set it up, what each part does in the real
   LifeOS code, how to test it, and why the decision was made.
 - Explain alternative approaches and trade-offs, how the design changes at 100k users,
@@ -60,8 +63,19 @@ observability (structured logs, error tracking).
   learning-log entry or shipped code as proof the concept was taught or understood.
 - User-provided repository link: https://github.com/jateenyadav/LifeOS.git.
 
+## Google sign-in
+- Support Google OAuth 2.0 / OpenID Connect web sign-in alongside email/password.
+- Validate Google's identity on the API and issue the same LifeOS session tokens;
+  do not auto-link a password account based only on a matching email address.
+- Keep temporary login states and handoffs short-lived and one-use. Google client
+  credentials are owner-supplied, private API settings, never committed.
+
 ---
 ### Change log
 - 2026-09-20: Initial copy seeded from the master brief (Section 2).
 - 2026-09-23: Owner reiterated beginner-first, step-by-step teaching of every process
   as a primary deliverable; added comprehension checkpoints and repository link.
+- 2026-09-23: Owner requested a complete Google OAuth 2.0 sign-in process in addition
+  to the existing email/password flow, with beginner-first teaching.
+- 2026-09-23: Owner revised pacing: prioritize development now; do the teaching and
+  comprehension checks at the end. Phase 0 deployment still needs their credentials.

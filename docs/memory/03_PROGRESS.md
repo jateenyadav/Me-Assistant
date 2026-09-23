@@ -1,9 +1,10 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-23 (HTTP request/validation lesson delivered)_
+_Last updated: 2026-09-23 (manual finance slice + development-first pacing)_
 
 ## Current phase
-**Phase 0 — Foundation** (in progress; deployment pending)
+**Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
+Google live consent, and teaching checkpoints remain open)
 
 ## Done
 - Bootstrapped persistent-context system: `AGENTS.md`, `CLAUDE.md`, `/docs/memory/` (8 files), root README.
@@ -24,24 +25,50 @@ _Last updated: 2026-09-23 (HTTP request/validation lesson delivered)_
   POST → NestJS controller and server-side validation → service → MongoDB → safe
   response. Included a non-mutating invalid-payload `curl` check, alternatives,
   scaling considerations, and interview Q&A; owner teach-back is still pending.
+- Google OAuth 2.0 / OIDC web sign-in integrated with the existing LifeOS auth:
+  authorization code, PKCE, state cookie + DB attempt, nonce and verified ID
+  token, Google `sub` user lookup, hashed one-use ticket, and standard session
+  tokens. Existing password flow remains intact; existing email is not linked.
+- Google focused tests (state, PKCE, verified identity, expiry, replay) and API/web
+  typechecks pass; web production build passes with the new callback route.
+  Existing auth smoke passes against configured Atlas with Google input checks;
+  uniquely named test user/tokens were cleaned up.
+- Owner answered the simple validation checkpoint correctly: the server rejects
+  the short password. Google sign-in path, alternatives, scale, and interview
+  question were presented in chat; owner OIDC teach-back remains pending.
+- Dedicated database walkthrough prepared for the owner: request → API validation →
+  UsersService/Mongoose → MongoDB → safe JSON response, plus connection/health
+  checks, alternatives, scale, and interview Q&A. Owner DB teach-back pending.
+- Manual finance vertical slice: integer-paise INR validation shared by API/web,
+  guarded transaction create/list endpoints with server-owned userId and a user/time
+  index, and a dashboard entry form with a 50-record recent history.
+- Finance unit tests (paise parsing, invalid DTOs, user ownership) and live HTTP
+  Atlas smoke (auth, invalid money, unauthorized writes and second-user isolation)
+  pass; smoke cleaned up both test users and their records. Google tests, API/web
+  typechecks, API and web production builds pass.
 
 ## In progress
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
-- Repository has no commits yet; Phase 1 waits for the Phase 0 commit and roadmap update.
-- Phase 0 teaching remains in progress: the HTTP request/validation lesson was
-  delivered, but the owner has not yet completed its comprehension checkpoint;
-  database and JWT deep-dives are next.
-- Local API and web servers are currently stopped; prior smoke results are historical.
+- Repository has an initial commit; current Google sign-in and finance work are
+  uncommitted. Owner authorized development-first despite incomplete deployment.
+- Learning walkthrough and teach-backs are deferred until the end at owner's
+  request; Phase 0 teaching stays unchecked. Finance concepts logged as pending.
+- Google live consent/callback still needs owner-created Web OAuth credentials.
+- Local API and web dev servers are currently stopped; smoke ran in this session.
 
 ## Next
-- First, hear the owner's request-validation teach-back, then teach MongoDB and JWT
-  one at a time with hands-on checks. Leave the roadmap teaching checkpoint open
-  until the owner confirms understanding; then ask for the Phase 0 commit.
-- Deploy empty API + web, verify production health/auth, then close Phase 0 and begin
-  Phase 1 finance (notification listener + email fallback).
+- Continue Phase 1 with Android forward-only notification capture and ingestion,
+  classification prompts and email fallback; keep all imports user-scoped and
+  plan idempotency before integrating multiple sources.
+- Owner configures Google OAuth credentials to test real consent/callback and
+  provisions hosting to deploy API + web; review and commit the current code.
+- Revisit the pending DB/JWT/OIDC/finance lessons at the end, with hands-on
+  checks and teach-backs before checking the roadmap teaching item.
 
 ## Blockers
-- Deployment needs the user's hosting accounts and secrets.
+- Deployment needs hosting accounts/secrets; live Google sign-in needs owner-created
+  Google Web OAuth client ID/secret and registered callback URL. These do not
+  block the local manual finance slice.
 
 ---
 ## Resume bullets
@@ -50,3 +77,8 @@ _(Draft 1–2 per completed phase; refine with real numbers.)_
   Next.js dashboard, and shared type package with Zod-validated DTOs shared across services.
 - Built JWT auth with hashed rotating refresh tokens, verified over HTTP against Atlas;
   prevented unauthenticated token revocation and concurrent double-claims.
+- Extended custom JWT authentication with Google OIDC sign-in using PKCE,
+  nonce/ID-token verification, replay-safe DB handoff, and the existing session
+  model; tested failure/replay paths without persisting Google provider tokens.
+- Built a user-isolated finance entry and recent-history flow, storing INR amounts
+  as exact paise; verified validation and cross-account isolation over live HTTP.

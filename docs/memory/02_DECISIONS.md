@@ -40,3 +40,33 @@ all refreshes in a distributed lock (operational complexity). The conditional cl
 keeps the current slice small. The smoke test uses the configured live database and
 cleans up only its uniquely named test user's records; it does not require another
 database, an in-memory MongoDB emulator, or additional packages.
+
+## 2026-09-23 — Google OIDC code flow as optional web sign-in
+Use authorization code + PKCE + OIDC nonce through the official
+`google-auth-library` 11.1.0 on NestJS, which raises the required Node version
+to 22. A short-lived HttpOnly SameSite=Lax state cookie and an atomically
+consumed, TTL-indexed MongoDB attempt bind the callback to this browser. Verify
+Google's signed ID token/audience/nonce and verified email, then identify the
+LifeOS account by Google's stable `sub`. No Google provider tokens are stored.
+A hashed, one-use, 60-second DB ticket returned in the URL fragment lets web and
+API deploy on different sites without exposing LifeOS tokens in query strings;
+the browser checks its own `sessionStorage` state before exchanging the ticket.
+
+Alternatives: Google's browser ID-token button is simpler but does not use the
+requested API-side code exchange; a shared-site HttpOnly refresh cookie reduces
+XSS exposure but needs coordinated domains, CSRF strategy, and a wider migration
+of current auth; raw tokens in the redirect URL are simpler but leak through
+history/logs/referrers. Do not auto-link a password account by matching email:
+explicit account linking must separately prove ownership of the existing account.
+
+## 2026-09-23 — Finance groundwork before Phase 0 deployment; exact paise and scoped records
+Owner requested development-first and learning at the end, so begin a small manual
+finance slice while Phase 0 deployment and live Google consent await credentials.
+Keep Phase 0 incomplete and uncommitted status visible; do not silently claim it
+finished. Store INR amounts as integer paise, validate a strict shared DTO, derive
+`userId` solely from the verified token, index user/time, and cap recent results at 50.
+Alternatives: floating-point rupees (rounding errors in money), Decimal128 (more
+flexible currency/precision but extra serialization and UI complexity), managed
+currency library (appropriate when multi-currency arrives, premature for INR MVP).
+Manual entry exercises real persistence and isolation without needing mobile
+notification permissions or email credentials; those remain required next slices.

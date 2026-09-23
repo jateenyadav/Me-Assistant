@@ -1,6 +1,9 @@
 # 06 — Roadmap (tick off live)
 
-Don't start a phase until the previous one is committed and this file reflects it.
+Normally complete and commit a phase before starting the next. Owner explicitly
+requested development-first on 2026-09-23: finance groundwork may proceed while
+Phase 0 deployment and uncommitted Google sign-in remain open. Do not mark Phase 0
+complete or the teaching checkpoint checked until they actually happen.
 
 - [ ] **Phase 0 — Foundation** _(in progress)_
   - [x] Repo + persistent-context memory system live
@@ -9,11 +12,19 @@ Don't start a phase until the previous one is committed and this file reflects i
   - [x] JWT auth end-to-end (register/login/refresh/logout/me), rotation + hashed at rest
   - [x] Next.js web: login/register + guarded dashboard
   - [x] Auth round-trip verified against a live `MONGODB_URI` (HTTP smoke test with cleanup)
+  - [x] Optional Google OIDC sign-in (web/API flow, state + PKCE + nonce, one-use
+    MongoDB handoff; focused tests and existing auth smoke pass)
+  - [ ] Google live consent verified with owner-provided OAuth client credentials
   - [ ] Owner walkthrough/teach-back: HTTP API, request flow, DB connection, auth/JWT,
-    alternatives, scaling, and interview questions (HTTP validation lesson delivered;
-    teach-back and DB/JWT lessons still pending)
+    Google sign-in, alternatives, scaling, and interview questions (owner answered
+    server rejects invalid input; DB/JWT/OIDC teach-back still pending)
   - [ ] Empty app deployed (web + API) — _deferred until accounts/secrets ready_
-- [ ] **Phase 1 — Finance** — Android notification listener + email fallback + categorization flow; dashboard built fresh
+- [ ] **Phase 1 — Finance** _(in progress)_ — Android notification listener + email fallback + categorization flow
+  - [x] Manual INR transaction entry and recent-history dashboard; authenticated,
+    user-scoped API, shared validation and money/isolation tests
+  - [ ] Android forward-only notification capture + parser + categorization prompts
+  - [ ] Email ingestion and duplicate handling; iOS fallback
+  - [ ] Finance trends, paging and broader dashboard
 - [ ] **Phase 2 — Diet** — USDA + Open Food Facts, food search + logging + barcode scan
 - [ ] **Phase 3 — Workout** — wger/ExerciseDB integrated, workout builder, rest timers
 - [ ] **Phase 4 — Medication, notes, reminders** — CRUD + notifications

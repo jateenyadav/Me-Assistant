@@ -17,8 +17,11 @@ export class User {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email!: string;
 
-  @Prop({ required: true })
-  passwordHash!: string;
+  @Prop()
+  passwordHash?: string;
+
+  @Prop({ unique: true, sparse: true })
+  googleSub?: string;
 
   // RBAC designed in from day one, even with one real user (Section 8).
   @Prop({ required: true, default: "user", enum: ["user", "admin"] })

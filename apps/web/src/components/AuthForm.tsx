@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginSchema, registerSchema } from "@lifeos/shared";
-import { login, register } from "@/lib/auth";
+import { login, register, startGoogleLogin } from "@/lib/auth";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
@@ -15,6 +15,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   const isRegister = mode === "register";
   const schema = isRegister ? registerSchema : loginSchema;
+
+  useEffect(() => {
+    const googleError = new URLSearchParams(window.location.search).get("google");
+    if (googleError === "existing") setError("This email has a password account. Sign in with your password.");
+    else if (googleError === "failed") setError("Google sign-in failed. Please try again.");
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +47,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   return (
     <div className="center">
-      <form className="card" onSubmit={onSubmit}>
+      <div className="auth-stack">
+        <form className="card" onSubmit={onSubmit}>
         <h1>{isRegister ? "Create your LifeOS account" : "Welcome back"}</h1>
         <p className="muted">
           {isRegister ? "One app for your whole life." : "Sign in to your dashboard."}
@@ -82,7 +89,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             </>
           )}
         </p>
-      </form>
+        </form>
+        {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
+          <button type="button" className="google-button" onClick={startGoogleLogin}>
+            Continue with Google
+          </button>
+        )}
+      </div>
     </div>
   );
 }

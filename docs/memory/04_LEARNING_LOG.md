@@ -128,3 +128,82 @@ alone protects the endpoint.
 **Interview angle:** "Why validate on both client and server?" Client checks improve
 UX; server checks enforce the contract for any caller. Next checkpoint: have the
 owner explain why a direct short-password request receives 400 before a DB write.
+
+---
+
+## 2026-09-23 — Google OAuth 2.0 / OpenID Connect sign-in (Phase 0 extension)
+**Where:** `apps/web/src/components/AuthForm.tsx`, `apps/web/src/lib/auth.ts`,
+`apps/web/src/app/auth/google/complete/page.tsx`, `apps/api/src/auth/google-auth.controller.ts`,
+`apps/api/src/auth/google-auth.service.ts`, `apps/api/src/auth/schemas/google-auth-attempt.schema.ts`.
+
+**What / why here:** Google checks identity; LifeOS controls its own accounts and
+sessions. Taught in chat: button → API redirect → Google → API callback exchanges
+the code with PKCE and verifies Google's ID token including audience, nonce, and
+verified email → service finds/creates a Google-subject user in MongoDB → short,
+hashed one-use ticket returns in a URL fragment → browser checks saved state,
+POSTs the ticket → API consumes it and issues existing LifeOS tokens. A safe
+hands-on check is to configure owner credentials, sign in twice with the same
+Google account, and verify both visits return to the same LifeOS dashboard.
+The owner answered the earlier request-validation check correctly ("reject it");
+the broader DB/JWT/OIDC teach-back has not happened yet.
+
+**Alternatives:** Browser ID-token sign-in with API verification needs fewer
+redirects but is not the requested server-side code flow; shared-site HttpOnly
+session cookies reduce JS token exposure but demand coordinated domains and
+CSRF protection; email-based auto-linking is convenient but unsafe without
+explicit proof of ownership.
+
+**At 100k users:** TTL indexes and atomic consumption keep ephemeral records
+bounded and reject replay across API replicas. Add rate limits, observability
+for sign-in failures, DB connection budgeting, and secret rotation.
+
+**Interview angle:** "Why doesn't the Google code itself log a user into LifeOS?"
+Only after code exchange, signed ID-token and nonce verification, and mapping
+Google `sub` to a LifeOS user does LifeOS issue its own session. OIDC teach-back
+is still pending.
+
+---
+
+## 2026-09-23 — MongoDB connection and persistence walkthrough (Phase 0 teaching)
+**Where:** `apps/api/src/app.module.ts`, `apps/api/src/config/env.validation.ts`,
+`apps/api/src/users/users.service.ts`, `apps/api/src/users/schemas/user.schema.ts`,
+`apps/api/src/health/health.controller.ts`.
+
+**What / why here:** The browser sends `POST /auth/register`; server-side Zod
+validation precedes `AuthService.register`, which looks up the email and passes a
+password hash to `UsersService.create`. Mongoose persists the User document in
+MongoDB using the API's `MONGODB_URI`; `toPublicUser` omits `passwordHash` from the
+response. The API keeps the URI private and checks it at startup. `/health` pings
+the database when the API is running, without creating a user or exposing secrets.
+This dedicated explanation is presented in chat; owner teach-back is pending.
+
+**Alternatives:** PostgreSQL gives relational constraints and strong transactions
+but requires a different schema/query model; Firebase reduces operational setup
+but trades away backend control and some learning value; in-memory storage is
+simple for a demo but disappears on restart and cannot serve multiple API replicas.
+
+**At 100k users:** Budget connection pools across API replicas, verify indexes
+on email and common queries, monitor query latency and failures, and avoid a
+database connection per HTTP request.
+
+**Interview angle:** "Where does a registration survive a browser refresh, and
+what does `/health` prove?" The server writes the user into MongoDB; the health
+check proves the running API can currently ping its DB, not that every query or
+future request will succeed. Next checkpoint: owner explains both in their own words.
+
+---
+
+## 2026-09-23 — Pending lesson: finance money and tenant isolation (Phase 1)
+**Status:** not taught; owner asked to do learning at the end. Do not check off
+teach-back from this entry.
+
+**Where:** `packages/shared/src/finance.ts`, `apps/api/src/transactions`,
+`apps/web/src/components/FinancePanel.tsx`.
+
+**Teach later:** Trace rupee text → exact integer paise → strict shared Zod DTO →
+authenticated controller deriving `userId` → Mongoose write → safe response and
+per-user recent-history query. Discuss float vs integer paise vs Decimal128;
+at 100k users cover indexes, cursor pagination, reconciliation/idempotent imports,
+and DB connection budgeting. Interview prompt: "How would you prevent one user
+from reading or forging another user's transactions, and why avoid floating-point
+storage for money?" Add hands-on check and owner teach-back when lessons resume.

@@ -10,6 +10,8 @@
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest --passWithNoTests",
+    "test:google": "pnpm build && node --test scripts/google-auth-test.cjs",
+    "test:finance": "pnpm build && node --test scripts/finance-test.cjs",
     "test:smoke": "pnpm build && node scripts/auth-smoke.cjs"
   },
   "dependencies": {
@@ -22,6 +24,7 @@
     "@nestjs/passport": "12.0.0",
     "@nestjs/platform-express": "12.0.3",
     "bcrypt": "6.0.0",
+    "google-auth-library": "11.1.0",
     "mongoose": "9.10.1",
     "passport": "0.7.0",
     "passport-jwt": "4.0.1",

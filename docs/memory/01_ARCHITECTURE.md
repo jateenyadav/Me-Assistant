@@ -50,9 +50,12 @@ iOS has **no** notification-reading API (Apple sandbox). iOS finance path = emai
 - `WorkoutLog` → contains `ExerciseSet` → references `Exercise`
 - `Medication`, `Note`, `Reminder`, `Goal` (tagged short/long-term, linked to a module)
 
-### Implemented so far (Phase 0)
+### Implemented so far (Phase 0 + first Phase 1 slice)
 - `User` { email (unique), passwordHash, role, profile{}, timestamps }
 - `RefreshToken` { userId, tokenHash, expiresAt, revoked } — keyed/indexed by userId
+- `Transaction` { userId, amountMinor (integer paise), type, category, note?,
+  occurredAt, currency=INR, source=manual, timestamps } — user/time compound index;
+  manual entry and recent-history only so far
 
 ## AI layer build order (Phase 5+)
 1. **MCP server** first (tools: `get_transactions`, `log_workout`, `get_goal_progress`,
