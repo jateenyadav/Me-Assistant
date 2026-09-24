@@ -1,6 +1,6 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-24 (30-day finance summary and live local smoke)_
+_Last updated: 2026-09-24 (beginner-friendly project status request)_
 
 ## Current phase
 **Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
@@ -93,6 +93,9 @@ Google live consent, and teaching checkpoints remain open)
   sign-in screen; no payment-app notification or signed-in mobile flow was tested.
 
 ## In progress
+- Owner requested simpler, less technical communication: in the next status
+  updates separate what is built, what was really tested, and what is still
+  missing; explain the flow using everyday language before technical details.
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
 - Owner authorized development-first despite incomplete deployment. `origin`
   (`jateenyadav/Me-Assistant`) is the confirmed push target; keep future pushes
