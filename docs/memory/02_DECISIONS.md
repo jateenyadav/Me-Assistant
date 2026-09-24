@@ -131,3 +131,18 @@ before native testing (risks overwriting app-specific listener code); or commit
 the wrapper files, letting Gradle install the version pinned by the wrapper
 properties. In CI, verify wrapper provenance and cache dependencies rather than
 committing dependency caches or local paths.
+
+## 2026-09-24 — Server-owned rolling finance summary
+Calculate a 30 × 24-hour UTC rolling window with a MongoDB `$match` scoped to
+the authenticated user, completed (categorized) records and occurrence time,
+then `$group` by type/category. Sum paise as Decimal128 and return safe-integer
+totals. The dashboard fetches this endpoint independently of its 50-item recent
+history so analytics does not change when the list is truncated. Include only
+payments within the window, not future-dated entries or pending Android imports.
+
+Alternatives: summing the latest 50 records in React misses older transactions;
+loading all user records to compute totals increases payload and client memory;
+precomputed daily rollups speed up reads but require backfill, reconciliation,
+and correction logic when a payment is categorized late. At higher volume add a
+compound index that matches summary filters and consider per-day rollups only
+after measuring aggregation latency.

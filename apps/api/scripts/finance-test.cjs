@@ -97,6 +97,37 @@ test("list filters by authenticated user ID and limits results", async () => {
   assert.equal(limit, 50);
 });
 
+test("30-day summary uses a user-scoped date window, excludes pending imports and sums exact paise", async () => {
+  const userId = new Types.ObjectId().toString();
+  const now = new Date("2026-09-24T10:00:00.000Z");
+  let pipeline;
+  const model = {
+    aggregate: (query) => {
+      pipeline = query;
+      return { exec: async () => [
+        { _id: { type: "expense", category: "food" }, totalMinor: { toString: () => "12501" } },
+        { _id: { type: "expense", category: "bills" }, totalMinor: { toString: () => "999" } },
+        { _id: { type: "income", category: "other" }, totalMinor: { toString: () => "8000" } },
+      ] };
+    },
+  };
+  const summary = await new TransactionsService(model).summary(userId, now);
+  assert.equal(pipeline[0].$match.userId.toString(), userId);
+  assert.deepEqual(pipeline[0].$match.category, { $exists: true });
+  assert.equal(pipeline[0].$match.occurredAt.$gte.toISOString(), "2026-08-25T10:00:00.000Z");
+  assert.equal(pipeline[0].$match.occurredAt.$lte.toISOString(), now.toISOString());
+  assert.deepEqual(pipeline[1].$group.totalMinor, { $sum: { $toDecimal: "$amountMinor" } });
+  assert.equal(summary.expenseMinor, 13500);
+  assert.equal(summary.incomeMinor, 8000);
+  assert.deepEqual(summary.expenseByCategory, [
+    { category: "food", amountMinor: 12501 }, { category: "bills", amountMinor: 999 },
+  ]);
+  const overflow = { aggregate: () => ({ exec: async () => [
+    { _id: { type: "expense", category: "food" }, totalMinor: { toString: () => "9007199254740992" } },
+  ] }) };
+  await assert.rejects(new TransactionsService(overflow).summary(userId, now), { status: 500 });
+});
+
 test("notification DTOs reject forged ownership, event IDs, and unexpected fields", () => {
   const input = { eventId: "a".repeat(64), amountMinor: 19900, type: "expense", occurredAt: new Date().toISOString(), upiId: "Merchant@UPI" };
   assert.equal(importNotificationSchema.parse(input).upiId, "merchant@upi");

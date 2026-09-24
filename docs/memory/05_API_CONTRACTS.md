@@ -38,6 +38,7 @@ standard LifeOS session. No Google provider token is persisted.
 | Method | Path | Auth | Body → Result |
 |---|---|---|---|
 | GET | `/transactions` | access token (Bearer) | → `{ transactions: PublicTransaction[] }` (50 newest, current user only) |
+| GET | `/transactions/summary` | access token (Bearer) | → `{ summary: { from, to, expenseMinor, incomeMinor, expenseByCategory: { category, amountMinor }[] } }` (rolling 30 × 24-hour period, completed transactions only) |
 | POST | `/transactions` | access token (Bearer) | `{ amountMinor, type, category, occurredAt, note? }` → `{ transaction }` (`201`) |
 | POST | `/transactions/emails/preview` | access token (Bearer) | `{ text }` → `{ payment: { amountMinor, type } }`; 400 if ambiguous/unpaid (no persistence) |
 | POST | `/transactions/emails` | access token (Bearer) | `{ text, category, occurredAt }` → `{ transaction }` (`source: "email_paste"`); 409 on replay with different category |
@@ -64,6 +65,11 @@ replay. Identical emails for different payment times can be entered separately;
 changed time for the same email may create a second record. The dashboard warns on
 similar recent amounts, but cross-source reconciliation and automatic email sync
 are not yet available.
+
+The summary aggregates all categorized records for the authenticated user in the
+rolling 30-day window, including imported payments. It excludes pending imports
+and future-dated records. Aggregation sums paise as MongoDB Decimal128 to avoid
+floating-point drift and rejects totals outside JavaScript's safe-integer range.
 
 ---
 

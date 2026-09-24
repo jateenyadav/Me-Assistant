@@ -59,3 +59,11 @@ export interface PublicTransaction extends CreateTransactionDto {
   source: "manual" | "android_notification" | "email_paste";
   createdAt: string;
 }
+
+export interface FinanceSummary {
+  from: string;
+  to: string;
+  expenseMinor: number;
+  incomeMinor: number;
+  expenseByCategory: { category: CreateTransactionDto["category"]; amountMinor: number }[];
+}

@@ -16,6 +16,11 @@ export class TransactionsController {
     return { transactions: await this.transactions.list(user.id) };
   }
 
+  @Get("summary")
+  async summary(@CurrentUser() user: AuthUser) {
+    return { summary: await this.transactions.summary(user.id) };
+  }
+
   @Post()
   async create(@CurrentUser() user: AuthUser, @Body(new ZodBody(createTransactionSchema)) input: CreateTransactionDto) {
     return { transaction: await this.transactions.create(user.id, input) };

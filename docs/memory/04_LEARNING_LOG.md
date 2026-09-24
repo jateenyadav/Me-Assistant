@@ -273,3 +273,23 @@ release artifacts; user count doesn't change the wrapper itself. Interview:
 "How can a clean CI runner reproduce your Android unit tests?" Answer: check
 out pinned bootstrap files, provide Android SDK/JDK, and run the wrapper's native
 test task. Hands-on: run `./gradlew :app:testDebugUnitTest` after a fresh clone.
+
+---
+
+## 2026-09-24 — Pending lesson: server-side finance aggregation (Phase 1)
+**Status:** pending lesson; development-first at owner's request. Not taught.
+
+**Where:** `apps/api/src/transactions/transactions.service.ts`,
+`apps/web/src/components/FinancePanel.tsx`, `packages/shared/src/finance.ts`.
+
+**Teach later:** Trace an authenticated dashboard request to MongoDB `$match`
+for that user's completed payments in the last 30 days, then `$group` expenses
+by category and income separately. Explain why the most recent 50 rows are not
+enough for a truthful total and why summing money uses decimal arithmetic until
+the value is proved safe for JSON numbers. Compare server aggregate, client
+calculation from every row, and precomputed daily rollups (cost/correctness).
+At 100k users, measure read latency, add matching indexes and use incremental
+rollups if needed; user-scoped access control must remain in the pipeline.
+Interview: "Why not just add up the 50 records shown?" Answer: they are a
+truncated view, not the 30-day dataset. Hands-on: add a transaction, refresh
+the dashboard and compare category totals with the API's summary response.

@@ -70,6 +70,9 @@ observability (structured logs, error tracking).
 - Commit and push completed, validated slices periodically, not only at the end
   of the project. Push to the confirmed `origin` repository
   (`https://github.com/jateenyadav/Me-Assistant.git`); do not force-push.
+- Owner wants the entire multi-module app completed and all runnable instances
+  exercised before calling the **project** done. An individually shipped slice
+  does not count as project completion; disclose blocked external requirements.
 
 ## Google sign-in
 - Support Google OAuth 2.0 / OpenID Connect web sign-in alongside email/password.
@@ -89,3 +92,5 @@ observability (structured logs, error tracking).
   comprehension checks at the end. Phase 0 deployment still needs their credentials.
 - 2026-09-24: Owner requested complete slices in one go and periodic code pushes.
 - 2026-09-24: Owner confirmed `Me-Assistant` rather than `LifeOS` for Git pushes.
+- 2026-09-24: Owner asked for complete project delivery and all-instance testing;
+  current finance groundwork and local smoke checks are not final release proof.

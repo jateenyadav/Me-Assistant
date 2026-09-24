@@ -1,6 +1,6 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-24 (finance delivery pushed to Me-Assistant)_
+_Last updated: 2026-09-24 (30-day finance summary and live local smoke)_
 
 ## Current phase
 **Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
@@ -80,6 +80,17 @@ Google live consent, and teaching checkpoints remain open)
 - Owner requested finish-and-validate one slice before moving on and push completed
   code periodically. The finance/mobile batch was pushed to `Me-Assistant` as
   `0447f1e` (main), following the owner's explicit destination confirmation.
+- Added a user-scoped rolling 30-day finance summary on the dashboard: expense,
+  income, and expenses by category across the full window rather than the
+  recent-50 list. MongoDB Decimal128 aggregation excludes pending/future records
+  and guards JSON safe-integer limits; API, shared DTO and dashboard use one
+  contract. Finance unit tests (9), Google tests (8), root workspace tests/build,
+  API/web typechecks, Atlas HTTP auth/isolation smoke, Flutter analysis/widget
+  test, native Android parser test and debug APK build all pass.
+- Ran the built API and web dashboard on localhost:4000/3000 and confirmed health
+  DB=up, login HTTP 200 and unauthenticated summary HTTP 401. Launched the
+  Flutter Android debug app on an Android emulator and visually confirmed its
+  sign-in screen; no payment-app notification or signed-in mobile flow was tested.
 
 ## In progress
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
@@ -95,7 +106,11 @@ Google live consent, and teaching checkpoints remain open)
 - Email path currently requires manually pasted content and explicit confirmation;
   no sender verification, connected mailbox, iOS native share path or automatic
   Android/email cross-source reconciliation exists yet.
-- Local API and web dev servers are stopped; smoke booted its own temporary API.
+- Built API and web server processes plus Flutter Android emulator were started
+  for this session; their longevity after the CLI exits is not guaranteed.
+- The project is **not complete**: Phase 1 still needs email ingestion,
+  reconciliation, paging and device validation; Phases 2–10, iOS shell,
+  deployment and store release are open. Do not equate local smoke with release.
 
 ## Next
 - Connect a consented mailbox for automatic iOS email ingestion (with secure tokens,
@@ -103,6 +118,8 @@ Google live consent, and teaching checkpoints remain open)
   explicit user-driven reconciliation before claiming duplicate-free finance data.
 - Validate real Android notifications and consent on a device; harden the mobile
   outbox and iOS native flow after that.
+- Add indexed history paging and longer-term trends; then continue the remaining
+  modules as validated slices, pushing each completed batch to `Me-Assistant`.
 - Owner configures Google OAuth credentials to test real consent/callback and
   provisions hosting to deploy API + web.
 - Revisit the pending DB/JWT/OIDC/finance lessons at the end, with hands-on
@@ -113,6 +130,8 @@ Google live consent, and teaching checkpoints remain open)
   Google Web OAuth client ID/secret and registered callback URL. Physical-device
   validation needs supported payment apps. Automatic mailbox sync also needs owner
   consent and provider credentials; none blocks local design and parser work.
+- No iOS Flutter project currently exists (`apps/mobile/ios` is absent), so the
+  iOS app cannot be launched even though an iOS Simulator is installed.
 
 ---
 ## Resume bullets
@@ -131,3 +150,6 @@ _(Draft 1–2 per completed phase; refine with real numbers.)_
   unit tests, an Atlas HTTP smoke and a compiled debug APK.
 - Added a review-first payment-email import with conservative INR parsing and
   atomic per-account idempotency; tested replay and cross-account isolation over HTTP.
+- Added a rolling 30-day, user-scoped finance breakdown using exact Decimal128
+  aggregation instead of truncating totals to displayed records; verified API
+  ownership and live HTTP behavior against Atlas.

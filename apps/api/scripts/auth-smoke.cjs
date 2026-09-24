@@ -57,9 +57,17 @@ async function main() {
     const ownList = await request("GET", "/transactions", null, 200, registered.accessToken);
     assert.equal(ownList.transactions.length, 1);
     assert.equal(ownList.transactions[0].id, created.transaction.id);
+    await request("GET", "/transactions/summary", null, 401);
+    const ownSummary = await request("GET", "/transactions/summary", null, 200, registered.accessToken);
+    assert.equal(ownSummary.summary.expenseMinor, 12501);
+    assert.equal(ownSummary.summary.incomeMinor, 0);
+    assert.deepEqual(ownSummary.summary.expenseByCategory, [{ category: "food", amountMinor: 12501 }]);
     const otherUser = await request("POST", "/auth/register", { email: otherEmail, password }, 201);
     const otherList = await request("GET", "/transactions", null, 200, otherUser.accessToken);
     assert.deepEqual(otherList.transactions, []);
+    const otherSummary = await request("GET", "/transactions/summary", null, 200, otherUser.accessToken);
+    assert.equal(otherSummary.summary.expenseMinor, 0);
+    assert.deepEqual(otherSummary.summary.expenseByCategory, []);
 
     const emailImport = { text: "Your bill payment was successful. Paid INR 121.40", category: "bills", occurredAt: new Date().toISOString() };
     await request("POST", "/transactions/emails/preview", { text: emailImport.text }, 401);

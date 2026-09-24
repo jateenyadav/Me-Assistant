@@ -1,9 +1,9 @@
 import { createHmac } from "node:crypto";
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import type { CreateTransactionDto, ImportEmailDto, ImportNotificationDto, PendingNotification, PublicTransaction } from "@lifeos/shared";
+import { transactionCategories, type CreateTransactionDto, type FinanceSummary, type ImportEmailDto, type ImportNotificationDto, type PendingNotification, type PublicTransaction } from "@lifeos/shared";
 import { Transaction, TransactionDocument, toPendingNotification, toPublicTransaction } from "./schemas/transaction.schema";
 import { UpiMapping, UpiMappingDocument } from "./schemas/upi-mapping.schema";
 import { parseEmailPayment } from "./email-payment.parser";
@@ -64,6 +64,39 @@ export class TransactionsService {
       .limit(50)
       .exec();
     return transactions.map(toPublicTransaction);
+  }
+
+  async summary(userId: string, to = new Date()): Promise<FinanceSummary> {
+    const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const groups = await this.transactions.aggregate<{
+      _id: { type: PublicTransaction["type"]; category: PublicTransaction["category"] };
+      totalMinor: { toString(): string };
+    }>([
+      { $match: { userId: new Types.ObjectId(userId), category: { $exists: true }, occurredAt: { $gte: from, $lte: to } } },
+      { $group: { _id: { type: "$type", category: "$category" }, totalMinor: { $sum: { $toDecimal: "$amountMinor" } } } },
+    ]).exec();
+    const totals = { expenseMinor: 0, incomeMinor: 0 };
+    const byCategory = new Map<PublicTransaction["category"], number>();
+    for (const group of groups) {
+      const raw = group.totalMinor.toString();
+      const amountMinor = /^\d+$/.test(raw) ? Number(raw) : NaN;
+      if (!Number.isSafeInteger(amountMinor)) throw new InternalServerErrorException("Finance total exceeds supported range");
+      if (group._id.type === "expense") {
+        if (!transactionCategories.includes(group._id.category)) throw new InternalServerErrorException("Unknown finance category");
+        byCategory.set(group._id.category, amountMinor);
+        totals.expenseMinor += amountMinor;
+      } else if (group._id.type === "income") {
+        totals.incomeMinor += amountMinor;
+      }
+    }
+    if (!Number.isSafeInteger(totals.expenseMinor) || !Number.isSafeInteger(totals.incomeMinor)) {
+      throw new InternalServerErrorException("Finance total exceeds supported range");
+    }
+    return {
+      from: from.toISOString(), to: to.toISOString(), ...totals,
+      expenseByCategory: [...byCategory].map(([category, amountMinor]) => ({ category, amountMinor }))
+        .sort((first, second) => second.amountMinor - first.amountMinor),
+    };
   }
 
   async pending(userId: string): Promise<PendingNotification[]> {

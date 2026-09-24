@@ -33,8 +33,10 @@ complete or the teaching checkpoint checked until they actually happen.
     conservative API preview, user-confirmed category/time, private idempotent import;
     parser/unit/Atlas HTTP smoke coverage
   - [x] Push validated finance/mobile slice to confirmed `Me-Assistant` origin
+  - [x] Rolling 30-day user-scoped totals and category breakdown across all
+    completed transactions; API tests, Atlas HTTP smoke and web build pass
   - [ ] Email ingestion and duplicate handling; iOS fallback
-  - [ ] Finance trends, paging and broader dashboard
+  - [ ] History paging, longer-term trends and broader dashboard
 - [ ] **Phase 2 — Diet** — USDA + Open Food Facts, food search + logging + barcode scan
 - [ ] **Phase 3 — Workout** — wger/ExerciseDB integrated, workout builder, rest timers
 - [ ] **Phase 4 — Medication, notes, reminders** — CRUD + notifications

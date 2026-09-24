@@ -8,6 +8,7 @@ import {
   parseRupeeAmount,
   transactionCategories,
   type CreateTransactionDto,
+  type FinanceSummary,
   type PublicTransaction,
 } from "@lifeos/shared";
 import { authenticatedFetch } from "@/lib/auth";
@@ -20,8 +21,17 @@ async function readError(response: Response): Promise<string> {
   return typeof body.message === "string" ? body.message : `Request failed (${response.status})`;
 }
 
+async function getSummary(): Promise<FinanceSummary> {
+  const response = await authenticatedFetch("/transactions/summary");
+  if (!response.ok) throw new Error(await readError(response));
+  const result = (await response.json()) as { summary: FinanceSummary };
+  return result.summary;
+}
+
 export function FinancePanel() {
   const [transactions, setTransactions] = useState<PublicTransaction[]>([]);
+  const [summary, setSummary] = useState<FinanceSummary | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +46,11 @@ export function FinancePanel() {
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
+  function refreshSummary() {
+    void getSummary().then((result) => { setSummary(result); setSummaryError(null); })
+      .catch((reason: unknown) => setSummaryError(reason instanceof Error ? reason.message : "Could not load summary"));
+  }
+
   useEffect(() => {
     let active = true;
     authenticatedFetch("/transactions")
@@ -46,6 +61,9 @@ export function FinancePanel() {
       .then((result) => { if (active) setTransactions(result.transactions); })
       .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load transactions"); })
       .finally(() => { if (active) setLoading(false); });
+    getSummary()
+      .then((result) => { if (active) setSummary(result); })
+      .catch((reason: unknown) => { if (active) setSummaryError(reason instanceof Error ? reason.message : "Could not load summary"); });
     return () => { active = false; };
   }, []);
 
@@ -80,6 +98,7 @@ export function FinancePanel() {
       if (!response.ok) throw new Error(await readError(response));
       const { transaction } = (await response.json()) as { transaction: PublicTransaction };
       setTransactions((previous) => [transaction, ...previous].slice(0, 50));
+      refreshSummary();
       setAmount("");
       setNote("");
     } catch (reason) {
@@ -133,6 +152,7 @@ export function FinancePanel() {
       if (!response.ok) throw new Error(await readError(response));
       const { transaction } = (await response.json()) as { transaction: PublicTransaction };
       setTransactions((previous) => [transaction, ...previous.filter((item) => item.id !== transaction.id)].slice(0, 50));
+      refreshSummary();
       setEmailText("");
       setEmailReview(null);
       setEmailDate("");
@@ -146,6 +166,29 @@ export function FinancePanel() {
   return (
     <section className="card finance-card" aria-labelledby="finance-heading">
       <h2 id="finance-heading">Transactions</h2>
+      <section className="finance-summary" aria-labelledby="finance-summary-heading">
+        <h3 id="finance-summary-heading">Last 30 days</h3>
+        {summaryError && <p role="alert" className="error">Summary: {summaryError}</p>}
+        {summary ? (
+          <>
+            <div className="finance-totals">
+              <p>Spent <strong>{currency.format(summary.expenseMinor / 100)}</strong></p>
+              <p>Received <strong>{currency.format(summary.incomeMinor / 100)}</strong></p>
+            </div>
+            {summary.expenseByCategory.length ? (
+              <ul className="finance-breakdown">
+                {summary.expenseByCategory.map(({ category: name, amountMinor }) => (
+                  <li key={name}>
+                    <span>{name}</span>
+                    <span className="finance-breakdown-bar" aria-hidden="true" style={{ width: `${100 * amountMinor / summary.expenseMinor}%` }} />
+                    <strong>{currency.format(amountMinor / 100)}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="muted">No expenses in this period.</p>}
+          </>
+        ) : !summaryError && <p className="muted">Loading summary…</p>}
+      </section>
       <p className="muted">Add a transaction manually. Automatic capture comes later.</p>
       <form onSubmit={onSave}>
         <div className="finance-fields">

@@ -39,7 +39,9 @@ Needs Node ≥22 (Google's auth library requires it), pnpm, and MongoDB
 ## Finance (current slice)
 Sign in and open `/dashboard` to add INR expenses or income and see your 50 most
 recent transactions. Amounts are entered in rupees and stored as integer paise;
-only your account can access its records. Use
+only your account can access its records. The dashboard shows rolling 30-day
+income, spending and spending by category across all completed transactions,
+not only the 50 shown in recent history. Use
 `pnpm --filter @lifeos/api test:finance` for offline money/isolation checks.
 The dashboard also accepts **pasted payment-confirmation emails**: review the
 detected INR amount and direction, enter the real payment time and category, and
