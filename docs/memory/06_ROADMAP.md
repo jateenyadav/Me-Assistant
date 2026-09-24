@@ -22,7 +22,16 @@ complete or the teaching checkpoint checked until they actually happen.
 - [ ] **Phase 1 — Finance** _(in progress)_ — Android notification listener + email fallback + categorization flow
   - [x] Manual INR transaction entry and recent-history dashboard; authenticated,
     user-scoped API, shared validation and money/isolation tests
-  - [ ] Android forward-only notification capture + parser + categorization prompts
+  - [x] Android forward-only listener, on-device parser/queue, explicit capture opt-in,
+    category review, authenticated idempotent imports + learned UPI matching;
+    API tests, Atlas HTTP smoke and debug APK build pass
+  - [x] Version native Gradle wrapper and validate parser JUnit tests from a
+    reproducible checkout; validate Flutter analysis/widget tests and APK
+  - [ ] Verify Android notification access and real payment-app messages on a device;
+    calibrate parser and confirm store/privacy disclosures before release
+  - [x] Manual email paste + review flow on web (usable from an iOS browser):
+    conservative API preview, user-confirmed category/time, private idempotent import;
+    parser/unit/Atlas HTTP smoke coverage
   - [ ] Email ingestion and duplicate handling; iOS fallback
   - [ ] Finance trends, paging and broader dashboard
 - [ ] **Phase 2 — Diet** — USDA + Open Food Facts, food search + logging + barcode scan

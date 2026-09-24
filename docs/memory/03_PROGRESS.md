@@ -1,6 +1,6 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-23 (manual finance slice + development-first pacing)_
+_Last updated: 2026-09-24 (validated finance delivery batch)_
 
 ## Current phase
 **Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
@@ -46,29 +46,78 @@ Google live consent, and teaching checkpoints remain open)
   Atlas smoke (auth, invalid money, unauthorized writes and second-user isolation)
   pass; smoke cleaned up both test users and their records. Google tests, API/web
   typechecks, API and web production builds pass.
+- Bootstrapped Android Flutter shell with explicit app-level capture opt-in and
+  system permission handoff. Native `NotificationListenerService` accepts only NEW
+  posts from known payment apps; conservative parser excludes OTP/failed/requested
+  messages, stores parsed-only candidates privately (backup off), and raises a
+  generic open-the-app alert. It never scans existing notifications.
+- Flutter foreground sync retries parsed events after login; 401 refresh works while
+  app is alive. Unmatched imports surface a category picker; categorizing saves
+  a per-user/type HMAC UPI mapping so future events from that counterparty auto-file.
+  Logout stops listener capture and clears its local queue.
+- Authenticated API notification import uses a partial unique per-user/event index
+  and atomic upsert; replay returns the existing record, changed-payload replay
+  returns 409, and pending records do not pollute completed history. Added DTO,
+  idempotency, learned-mapping, and ownership tests plus live HTTP Atlas smoke;
+  smoke cleans up test users, transactions, and mappings.
+- `flutter analyze`, `flutter test`, native Kotlin parser JUnit tests,
+  `flutter build apk --debug`, API typecheck/build, finance and Google tests,
+  and live HTTP smoke pass. Android capture itself has
+  **not** been exercised on a real device; debug APK compilation is not that check.
+- Added authenticated paste-and-review email payment import on the web (usable
+  from an iOS browser): conservative INR confirmation parser, explicit category
+  and payment time, server-side reparse, structured-only persistence, and
+  user/source-scoped HMAC replay protection. A nearby-amount warning asks the
+  user to check history; it does not silently merge distinct payments.
+- Email parser/unit tests cover unpaid/failed/ambiguous messages, repeated generic
+  receipts, replay and ownership. Atlas HTTP smoke covers preview authorization,
+  malformed input, replay/concurrent retries and user isolation. API/web
+  typechecks and web production build pass.
+- Revalidated the combined finance/mobile batch: 8 finance and 8 Google unit tests,
+  API/web typechecks, web production build, live Atlas HTTP smoke with cleanup,
+  Flutter analysis/widget test/debug APK, and Android parser JUnit task all pass.
+  Gradle wrapper launcher/JAR are now included for fresh-clone native testing.
+- Owner requested finish-and-validate one slice before moving on and push completed
+  code periodically; this batch is one cohesive, locally committed delivery.
 
 ## In progress
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
-- Repository has an initial commit; current Google sign-in and finance work are
-  uncommitted. Owner authorized development-first despite incomplete deployment.
+- The validated Google/finance/mobile work is committed locally in this delivery
+  batch. Push destination needs confirmation: configured `origin` is
+  `jateenyadav/Me-Assistant`, but the owner-provided link is `jateenyadav/LifeOS`;
+  both have distinct existing `main` tips. Do not force-push either repository.
+  Owner authorized development-first despite incomplete deployment.
 - Learning walkthrough and teach-backs are deferred until the end at owner's
   request; Phase 0 teaching stays unchecked. Finance concepts logged as pending.
 - Google live consent/callback still needs owner-created Web OAuth credentials.
-- Local API and web dev servers are currently stopped; smoke ran in this session.
+- Android device listener permission flow and real vendor notifications require a
+  phone/emulator with supported payment apps; parse precision and release/privacy
+  review cannot be inferred from the APK build.
+- Email path currently requires manually pasted content and explicit confirmation;
+  no sender verification, connected mailbox, iOS native share path or automatic
+  Android/email cross-source reconciliation exists yet.
+- Local API and web dev servers are stopped; smoke booted its own temporary API.
 
 ## Next
-- Continue Phase 1 with Android forward-only notification capture and ingestion,
-  classification prompts and email fallback; keep all imports user-scoped and
-  plan idempotency before integrating multiple sources.
+- Connect a consented mailbox for automatic iOS email ingestion (with secure tokens,
+  cursors and provider compliance); add reliable cross-source reference matching or
+  explicit user-driven reconciliation before claiming duplicate-free finance data.
+- Validate real Android notifications and consent on a device; harden the mobile
+  outbox and iOS native flow after that.
+- Confirm which GitHub repository should receive this batch; push without
+  rewriting remote history once the destination is confirmed.
 - Owner configures Google OAuth credentials to test real consent/callback and
-  provisions hosting to deploy API + web; review and commit the current code.
+  provisions hosting to deploy API + web.
 - Revisit the pending DB/JWT/OIDC/finance lessons at the end, with hands-on
   checks and teach-backs before checking the roadmap teaching item.
 
 ## Blockers
 - Deployment needs hosting accounts/secrets; live Google sign-in needs owner-created
-  Google Web OAuth client ID/secret and registered callback URL. These do not
-  block the local manual finance slice.
+  Google Web OAuth client ID/secret and registered callback URL. Physical-device
+  validation needs supported payment apps. Automatic mailbox sync also needs owner
+  consent and provider credentials; none blocks local design and parser work.
+- Publishing is paused until the owner resolves the `Me-Assistant` vs `LifeOS`
+  repository destination; both repositories have existing, different `main` heads.
 
 ---
 ## Resume bullets
@@ -82,3 +131,8 @@ _(Draft 1–2 per completed phase; refine with real numbers.)_
   model; tested failure/replay paths without persisting Google provider tokens.
 - Built a user-isolated finance entry and recent-history flow, storing INR amounts
   as exact paise; verified validation and cross-account isolation over live HTTP.
+- Built an opt-in Android payment notification capture path with on-device parsing,
+  replay-safe user-scoped imports and learned UPI categorization; validated with
+  unit tests, an Atlas HTTP smoke and a compiled debug APK.
+- Added a review-first payment-email import with conservative INR parsing and
+  atomic per-account idempotency; tested replay and cross-account isolation over HTTP.

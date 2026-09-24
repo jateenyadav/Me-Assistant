@@ -70,3 +70,64 @@ flexible currency/precision but extra serialization and UI complexity), managed
 currency library (appropriate when multi-currency arrives, premature for INR MVP).
 Manual entry exercises real persistence and isolation without needing mobile
 notification permissions or email credentials; those remain required next slices.
+
+## 2026-09-23 — Forward-only Android listener; idempotent notification imports
+Use Flutter for UI and a tiny native Kotlin `NotificationListenerService` for
+new posted notifications. Never call `getActiveNotifications`; allowlist supported
+payment apps and reject low-confidence/OTP/failure messages. Require a separate
+in-app affirmative consent and Android listener grant before capture. Store only
+parsed candidates in no-backup, app-private storage while offline; upload when
+the app opens and discard each candidate only after server acknowledgement.
+Android alerts open the app; the category picker lives in Flutter, not a
+background server push. Mobile tokens are memory-only pending a secure persistent
+session design. Device/vendor validation remains open before claiming release ready.
+
+Use one `Transaction` document as either pending (no category) or categorized;
+atomic upsert and a unique (userId, source, sourceEventId) index make retries
+idempotent. `UpiMapping` stores a user/type-scoped HMAC of the counterparty UPI
+ID (domain-separated with userId under the existing JWT secret); raw IDs never
+persist on the API. Rotation of the JWT secret also invalidates learned mappings:
+move to a separately managed matching key before planned key rotation.
+
+Alternatives: background upload/FCM improves timeliness but requires durable mobile
+credentials, background execution guarantees and a push channel; BullMQ/Socket.io
+would add distributed infrastructure before a working capture path. A separate
+`PendingImport` collection keeps completed transactions strictly categorized but
+needs cross-collection consistency on classification. Raw UPI strings simplify
+lookup but leak sensitive identifiers at rest. Distinct email and Android events
+can still duplicate a transaction: reconciliation is the next import slice.
+
+## 2026-09-23 — Review-first pasted email import before mailbox integration
+Expose an authenticated email **preview** and explicit **confirm** endpoint in
+the existing finance API. Reject ambiguous amounts/direction and unpaid messages;
+reparse on confirmation and store only structured fields. A domain-separated,
+user-scoped HMAC of normalized text and user-confirmed payment time (not raw mail)
+uses the existing JWT secret and the existing unique source/event index for
+same-input idempotency. Identical generic receipt text on different dates remains
+importable. A nearby-amount warning in the web UI invites manual comparison; do
+not silently merge distinct payments based on amount/time alone.
+
+Alternatives: mailbox OAuth plus polling gives real automatic iOS coverage but
+requires sensitive mailbox permissions, secure token storage, provider review,
+sync cursors and explicit consent not provisioned for this slice; an inbound
+forwarding address needs verified routing and abuse protection; a read-then-insert
+dedupe check races on concurrent retries. Text-only fingerprints would collapse
+separate identical receipts, while amount/time-based automatic cross-source merges
+risk discarding real payments. Existing JWT secret rotation changes the fingerprint
+key; use a dedicated versioned key before rotating it. Pasted email authenticity
+is unverified, and duplicate detection across sources remains open. The web path
+is usable on iOS in a browser, not a native share flow.
+
+## 2026-09-24 — Version the Android Gradle wrapper for native tests
+Track `gradlew`, `gradlew.bat`, and `gradle-wrapper.jar` with the Flutter Android
+project, while continuing to ignore `local.properties`, `.gradle`, credentials,
+and generated builds. The README's native test command must work on a fresh
+checkout; leaving its bootstrap files ignored makes the test unreproducible.
+Normalize the Windows launcher in Git while retaining CRLF on checkout.
+
+Alternatives: require each developer to install a compatible system Gradle
+(version drift and onboarding friction); regenerate the Flutter Android project
+before native testing (risks overwriting app-specific listener code); or commit
+the wrapper files, letting Gradle install the version pinned by the wrapper
+properties. In CI, verify wrapper provenance and cache dependencies rather than
+committing dependency caches or local paths.

@@ -63,7 +63,7 @@ label {
   margin: 14px 0 6px;
 }
 
-input {
+input, textarea {
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
@@ -72,6 +72,12 @@ input {
   color: var(--text);
   font-size: 14px;
 }
+
+textarea { resize: vertical; }
+
+.email-import { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--border); }
+.email-import h3 { margin: 0; font-size: 17px; }
+.email-import .muted { margin: 10px 0; }
 
 button {
   width: 100%;

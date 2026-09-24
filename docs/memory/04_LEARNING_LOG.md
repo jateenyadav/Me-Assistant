@@ -207,3 +207,69 @@ at 100k users cover indexes, cursor pagination, reconciliation/idempotent import
 and DB connection budgeting. Interview prompt: "How would you prevent one user
 from reading or forging another user's transactions, and why avoid floating-point
 storage for money?" Add hands-on check and owner teach-back when lessons resume.
+
+---
+
+## 2026-09-23 — Pending lesson: Android notification listener, offline outbox, idempotency (Phase 1)
+**Status:** pending lesson; owner asked to prioritize development. Not taught.
+
+**Where:** `apps/mobile/android/app/src/main/kotlin/com/lifeos/lifeos_mobile/`,
+`apps/mobile/lib/main.dart`, `apps/api/src/transactions/transactions.service.ts`.
+
+**Teach later:** Trace a NEW Android post → allowlisted native listener → conservative
+on-device parser → private queue → Flutter login/consent and authenticated sync →
+unique per-user event upsert → pending category or per-user UPI HMAC lookup →
+recorded transaction. Explain why the API never trusts a userId in the body and
+why an at-least-once upload needs idempotency rather than "send exactly once".
+Compare (1) foreground-only private queue vs background worker + secure tokens,
+(2) Mongo partial unique index/upsert vs Redis dedupe window vs read-then-insert,
+(3) one pending Transaction document vs separate import inbox with multi-document
+completion. At 100k users: move outbox to indexed encrypted device storage,
+paginate pending results, monitor parse precision/import lag, harden key rotation,
+add rate limits, and reconcile cross-source email/Android matches. Interview:
+"What happens if the phone loses network just after the API records a payment
+but before receiving 200?" Answer: retry same event ID; user-scoped unique upsert
+returns the original row rather than charging twice. Hands-on: submit the same
+authenticated fixture twice and confirm one row; then try another user's ID.
+
+---
+
+## 2026-09-23 — Pending lesson: review-first email parsing and duplicate boundaries (Phase 1)
+**Status:** pending lesson; development-first at owner's request. Not taught.
+
+**Where:** `apps/api/src/transactions/email-payment.parser.ts`,
+`apps/api/src/transactions/transactions.service.ts`, `apps/web/src/components/FinancePanel.tsx`.
+
+**Teach later:** Follow pasted payment text → authenticated preview → conservative
+INR/direction parsing → human category/time confirmation → authenticated reparse →
+atomic upsert keyed by user/source and HMAC(text + time) → transaction list.
+Compare manual review vs mailbox OAuth vs verified forwarding and unique-index
+upsert vs check-then-insert vs amount/time heuristic merges. Explain that a pasted
+email has **no verified sender**, text-only fingerprints merge legitimate repeated
+payments, and cross-source dedupe is unsolved. At 100k users: provider-token
+security and incremental sync, indexed per-user reconciliation, ingestion metrics,
+key rotation and rate limits; never trust an email's displayed sender or silently
+merge same-amount purchases. Interview question: "What if two identical receipts
+arrive, or an import request retries?" The same text/time retries to one row;
+distinct payment times are separate; Android/email need a stronger shared reference
+or explicit user confirmation. Hands-on: preview an unpaid bill and confirm 400,
+import a completed payment twice and confirm one ID, then repeat as another user.
+
+---
+
+## 2026-09-24 — Pending lesson: reproducible mobile build bootstrap (Phase 1)
+**Status:** pending lesson; development-first at owner's request. Not taught.
+
+**Where:** `apps/mobile/android/gradle/wrapper`, `apps/mobile/android/gradlew`,
+`apps/mobile/android/.gitignore`, `apps/mobile/README.md`.
+
+**Teach later:** Explain why native tests need a Gradle bootstrap even though
+Flutter builds the APK, and why launcher/JAR/properties belong in version control
+but caches and machine-specific `local.properties` do not. Compare (1) pinned
+Gradle wrapper, (2) system-wide Gradle with version drift, (3) regenerating
+Flutter scaffolding in CI, with their setup and supply-chain trade-offs. At
+100k users, cache pinned dependencies in CI, verify wrapper integrity and sign
+release artifacts; user count doesn't change the wrapper itself. Interview:
+"How can a clean CI runner reproduce your Android unit tests?" Answer: check
+out pinned bootstrap files, provide Android SDK/JDK, and run the wrapper's native
+test task. Hands-on: run `./gradlew :app:testDebugUnitTest` after a fresh clone.

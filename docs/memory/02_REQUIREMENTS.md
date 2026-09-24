@@ -63,6 +63,13 @@ observability (structured logs, error tracking).
   learning-log entry or shipped code as proof the concept was taught or understood.
 - User-provided repository link: https://github.com/jateenyadav/LifeOS.git.
 
+## Delivery cadence
+- Finish and validate one cohesive vertical slice end-to-end before moving to the
+  next; avoid leaving multiple half-finished features in the working tree.
+- Commit and push completed, validated slices periodically, not only at the end
+  of the project. Confirm the destination when configured remotes disagree with
+  the owner-provided repository link.
+
 ## Google sign-in
 - Support Google OAuth 2.0 / OpenID Connect web sign-in alongside email/password.
 - Validate Google's identity on the API and issue the same LifeOS session tokens;
@@ -79,3 +86,4 @@ observability (structured logs, error tracking).
   to the existing email/password flow, with beginner-first teaching.
 - 2026-09-23: Owner revised pacing: prioritize development now; do the teaching and
   comprehension checks at the end. Phase 0 deployment still needs their credentials.
+- 2026-09-24: Owner requested complete slices in one go and periodic code pushes.

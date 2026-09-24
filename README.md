@@ -11,7 +11,7 @@ exposed as an MCP server.
 ```
 apps/api      NestJS backend (@lifeos/api)
 apps/web      Next.js App Router dashboard (@lifeos/web)
-apps/mobile   Flutter app (placeholder until the mobile-capture slice)
+apps/mobile   Flutter/Android notification-capture prototype
 packages/shared  @lifeos/shared — shared TS types + Zod DTOs
 docs/memory   persistent project context (the "memory bank")
 ```
@@ -36,13 +36,18 @@ pnpm --filter @lifeos/web dev             # http://localhost:3000
 Needs Node ≥22 (Google's auth library requires it), pnpm, and MongoDB
 (local `mongodb://127.0.0.1:27017/lifeos` or Atlas).
 
-## Manual finance (first slice)
+## Finance (current slice)
 Sign in and open `/dashboard` to add INR expenses or income and see your 50 most
 recent transactions. Amounts are entered in rupees and stored as integer paise;
 only your account can access its records. Use
 `pnpm --filter @lifeos/api test:finance` for offline money/isolation checks.
-Automatic notification/email capture, bulk imports, and broader analytics are
-not built yet.
+The dashboard also accepts **pasted payment-confirmation emails**: review the
+detected INR amount and direction, enter the real payment time and category, and
+confirm. The API rejects ambiguous/unpaid text, doesn't store the raw message and
+deduplicates exact same-message/same-time retries per account. Pasted text is
+user-supplied, not sender-verified; avoid importing a payment already captured on
+Android. No mailbox sync, native iOS email flow, physical-device notification
+verification, cross-source deduplication or broader analytics is built yet.
 
 ## Google sign-in (optional)
 1. In Google Cloud Console, configure the OAuth consent screen and create an OAuth 2.0

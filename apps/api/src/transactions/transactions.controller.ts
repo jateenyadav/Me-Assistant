@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
-import { createTransactionSchema, type CreateTransactionDto } from "@lifeos/shared";
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { categorizeNotificationSchema, createTransactionSchema, emailTextSchema, importEmailSchema, importNotificationSchema, type CategorizeNotificationDto, type CreateTransactionDto, type EmailTextDto, type ImportEmailDto, type ImportNotificationDto } from "@lifeos/shared";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AuthUser } from "../auth/types";
@@ -19,5 +19,30 @@ export class TransactionsController {
   @Post()
   async create(@CurrentUser() user: AuthUser, @Body(new ZodBody(createTransactionSchema)) input: CreateTransactionDto) {
     return { transaction: await this.transactions.create(user.id, input) };
+  }
+
+  @Post("notifications")
+  async importNotification(@CurrentUser() user: AuthUser, @Body(new ZodBody(importNotificationSchema)) input: ImportNotificationDto) {
+    return this.transactions.importNotification(user.id, input);
+  }
+
+  @Post("emails/preview")
+  previewEmail(@Body(new ZodBody(emailTextSchema)) input: EmailTextDto) {
+    return { payment: this.transactions.previewEmail(input.text) };
+  }
+
+  @Post("emails")
+  async importEmail(@CurrentUser() user: AuthUser, @Body(new ZodBody(importEmailSchema)) input: ImportEmailDto) {
+    return { transaction: await this.transactions.importEmail(user.id, input) };
+  }
+
+  @Get("notifications/pending")
+  async pending(@CurrentUser() user: AuthUser) {
+    return { notifications: await this.transactions.pending(user.id) };
+  }
+
+  @Patch("notifications/:id/category")
+  async categorize(@CurrentUser() user: AuthUser, @Param("id") id: string, @Body(new ZodBody(categorizeNotificationSchema)) input: CategorizeNotificationDto) {
+    return { transaction: await this.transactions.categorize(user.id, id, input.category) };
   }
 }
