@@ -293,3 +293,15 @@ rollups if needed; user-scoped access control must remain in the pipeline.
 Interview: "Why not just add up the 50 records shown?" Answer: they are a
 truncated view, not the 30-day dataset. Hands-on: add a transaction, refresh
 the dashboard and compare category totals with the API's summary response.
+
+---
+
+## 2026-09-24 — Structured code-map walkthrough requested
+**Status:** overview requested for web auth, Google OIDC, transactions, MongoDB,
+and Android flow; do not mark the full owner teach-back checkpoint complete.
+
+**Format:** Diagram from web screen → React function → HTTP endpoint → Zod
+validation → Nest service → Mongoose collection → response. Name actual files
+and functions, show one sample payload and stored document, distinguish JWT
+session proof from Google OIDC identity proof, compare alternatives and trade-offs,
+describe what changes at 100k users, and label unverified versus not built.

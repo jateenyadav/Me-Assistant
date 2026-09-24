@@ -55,6 +55,11 @@ observability (structured logs, error tracking).
   how it works in everyday terms, what was actually tested, and what is still
   missing. Define technical words only when needed; never mistake a passing
   build or an emulator screen for a fully working released feature.
+- For technical walkthroughs, lead with a screen → function → API → validation →
+  service → database → response diagram. Then name the real files and important
+  functions, show a small example of the data being sent/stored, explain why
+  each technology was chosen versus alternatives, and label each path as tested,
+  unverified, or not built. Do not replace this with a vague feature summary.
 - **Current pacing (owner update 2026-09-23): develop first; save the learning
   walkthrough for the end.** Do not interrupt each slice for a comprehension check.
   Keep pending lessons and design decisions documented so none are lost.
@@ -100,3 +105,5 @@ observability (structured logs, error tracking).
   current finance groundwork and local smoke checks are not final release proof.
 - 2026-09-24: Owner asked for simple, beginner-first explanations of what is done,
   how it works, what works today, and what remains.
+- 2026-09-24: Owner clarified the desired format: code-file/function map and
+  request/data-flow diagrams, with trade-offs and unbuilt functions identified.

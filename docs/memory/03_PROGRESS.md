@@ -1,6 +1,6 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-24 (beginner-friendly project status request)_
+_Last updated: 2026-09-24 (diagram-first code walkthrough request)_
 
 ## Current phase
 **Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
@@ -95,7 +95,8 @@ Google live consent, and teaching checkpoints remain open)
 ## In progress
 - Owner requested simpler, less technical communication: in the next status
   updates separate what is built, what was really tested, and what is still
-  missing; explain the flow using everyday language before technical details.
+  missing. Owner clarified they want a diagram plus named file/function map,
+  request/data-flow examples and alternative choices, not an abstract summary.
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
 - Owner authorized development-first despite incomplete deployment. `origin`
   (`jateenyadav/Me-Assistant`) is the confirmed push target; keep future pushes
