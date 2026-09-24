@@ -2,7 +2,7 @@
 
 Normally complete and commit a phase before starting the next. Owner explicitly
 requested development-first on 2026-09-23: finance groundwork may proceed while
-Phase 0 deployment and uncommitted Google sign-in remain open. Do not mark Phase 0
+Phase 0 deployment and Google live consent remain open. Do not mark Phase 0
 complete or the teaching checkpoint checked until they actually happen.
 
 - [ ] **Phase 0 — Foundation** _(in progress)_
@@ -32,6 +32,7 @@ complete or the teaching checkpoint checked until they actually happen.
   - [x] Manual email paste + review flow on web (usable from an iOS browser):
     conservative API preview, user-confirmed category/time, private idempotent import;
     parser/unit/Atlas HTTP smoke coverage
+  - [x] Push validated finance/mobile slice to confirmed `Me-Assistant` origin
   - [ ] Email ingestion and duplicate handling; iOS fallback
   - [ ] Finance trends, paging and broader dashboard
 - [ ] **Phase 2 — Diet** — USDA + Open Food Facts, food search + logging + barcode scan

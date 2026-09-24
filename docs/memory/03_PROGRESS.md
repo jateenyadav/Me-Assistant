@@ -1,6 +1,6 @@
 # 03 — Progress (rewritten every session)
 
-_Last updated: 2026-09-24 (validated finance delivery batch)_
+_Last updated: 2026-09-24 (finance delivery pushed to Me-Assistant)_
 
 ## Current phase
 **Phase 1 — Finance groundwork** (in progress by owner request; Phase 0 deployment,
@@ -8,7 +8,7 @@ Google live consent, and teaching checkpoints remain open)
 
 ## Done
 - Bootstrapped persistent-context system: `AGENTS.md`, `CLAUDE.md`, `/docs/memory/` (8 files), root README.
-- Monorepo scaffold (pnpm 12.5.1 + Turborepo 2.11.2): `apps/api`, `apps/web`, `apps/mobile` (placeholder), `packages/shared`.
+- Monorepo scaffold (pnpm 12.5.1 + Turborepo 2.11.2): `apps/api`, `apps/web`, `apps/mobile`, `packages/shared`.
 - `@lifeos/shared`: Zod auth DTOs + shared types — builds to `dist`.
 - NestJS API: env validation (Zod, fail-fast), Mongoose async connection, `GET /health` (DB ping), `User` model (RBAC role, profile), toPublicUser mapper. **Builds** (`dist/main.js`).
 - JWT auth end-to-end: register/login/refresh/logout/`me`. Access = JWT; refresh = opaque `jti.secret`, bcrypt-hashed at rest, rotated on use, reuse-detection revokes chain, TTL index auto-purges. Typechecks.
@@ -78,15 +78,14 @@ Google live consent, and teaching checkpoints remain open)
   Flutter analysis/widget test/debug APK, and Android parser JUnit task all pass.
   Gradle wrapper launcher/JAR are now included for fresh-clone native testing.
 - Owner requested finish-and-validate one slice before moving on and push completed
-  code periodically; this batch is one cohesive, locally committed delivery.
+  code periodically. The finance/mobile batch was pushed to `Me-Assistant` as
+  `0447f1e` (main), following the owner's explicit destination confirmation.
 
 ## In progress
 - Live deployment still requires owner-provisioned hosting accounts and secrets.
-- The validated Google/finance/mobile work is committed locally in this delivery
-  batch. Push destination needs confirmation: configured `origin` is
-  `jateenyadav/Me-Assistant`, but the owner-provided link is `jateenyadav/LifeOS`;
-  both have distinct existing `main` tips. Do not force-push either repository.
-  Owner authorized development-first despite incomplete deployment.
+- Owner authorized development-first despite incomplete deployment. `origin`
+  (`jateenyadav/Me-Assistant`) is the confirmed push target; keep future pushes
+  to completed, validated slices only.
 - Learning walkthrough and teach-backs are deferred until the end at owner's
   request; Phase 0 teaching stays unchecked. Finance concepts logged as pending.
 - Google live consent/callback still needs owner-created Web OAuth credentials.
@@ -104,8 +103,6 @@ Google live consent, and teaching checkpoints remain open)
   explicit user-driven reconciliation before claiming duplicate-free finance data.
 - Validate real Android notifications and consent on a device; harden the mobile
   outbox and iOS native flow after that.
-- Confirm which GitHub repository should receive this batch; push without
-  rewriting remote history once the destination is confirmed.
 - Owner configures Google OAuth credentials to test real consent/callback and
   provisions hosting to deploy API + web.
 - Revisit the pending DB/JWT/OIDC/finance lessons at the end, with hands-on
@@ -116,8 +113,6 @@ Google live consent, and teaching checkpoints remain open)
   Google Web OAuth client ID/secret and registered callback URL. Physical-device
   validation needs supported payment apps. Automatic mailbox sync also needs owner
   consent and provider credentials; none blocks local design and parser work.
-- Publishing is paused until the owner resolves the `Me-Assistant` vs `LifeOS`
-  repository destination; both repositories have existing, different `main` heads.
 
 ---
 ## Resume bullets
