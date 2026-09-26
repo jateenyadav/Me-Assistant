@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument, Types } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 import type { PublicTransaction } from "@lifeos/shared";
 
 export type UpiMappingDocument = HydratedDocument<UpiMapping>;
 
 @Schema({ timestamps: true })
 export class UpiMapping {
-  @Prop({ type: Types.ObjectId, required: true, ref: "User" })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: "User" })
   userId!: Types.ObjectId;
 
   @Prop({ type: String, required: true })

@@ -74,11 +74,13 @@ observability (structured logs, error tracking).
   confirmed `jateenyadav/Me-Assistant` as the active push destination.
 
 ## Delivery cadence
-- Finish and validate one cohesive vertical slice end-to-end before moving to the
-  next; avoid leaving multiple half-finished features in the working tree.
-- Commit and push completed, validated slices periodically, not only at the end
-  of the project. Push to the confirmed `origin` repository
-  (`https://github.com/jateenyadav/Me-Assistant.git`); do not force-push.
+- **Owner update 2026-09-26:** stop gating work on one feature/phase at a time;
+  build toward the entire project in one coordinated delivery. Keep testable
+  boundaries and don't mark unfinished integrations as complete. Don't defer
+  implementable modules merely because a prior phase needs external accounts.
+- Continue to commit/push only when explicitly requested in the current task;
+  never silently commit or push an unreviewed multi-module working tree. The
+  confirmed destination remains `jateenyadav/Me-Assistant`.
 - Owner wants the entire multi-module app completed and all runnable instances
   exercised before calling the **project** done. An individually shipped slice
   does not count as project completion; disclose blocked external requirements.

@@ -6,6 +6,10 @@ import { HealthModule } from "./health/health.module";
 import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { TransactionsModule } from "./transactions/transactions.module";
+import { LifeModule } from "./life/life.module";
+import { CatalogModule } from "./catalog/catalog.module";
+import { McpModule } from "./mcp/mcp.module";
+import { AiModule } from "./ai/ai.module";
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { TransactionsModule } from "./transactions/transactions.module";
     UsersModule,
     AuthModule,
     TransactionsModule,
+    LifeModule,
+    CatalogModule,
+    McpModule,
+    AiModule,
   ],
 })
 export class AppModule {}

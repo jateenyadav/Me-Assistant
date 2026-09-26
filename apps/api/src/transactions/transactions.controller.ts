@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { categorizeNotificationSchema, createTransactionSchema, emailTextSchema, importEmailSchema, importNotificationSchema, type CategorizeNotificationDto, type CreateTransactionDto, type EmailTextDto, type ImportEmailDto, type ImportNotificationDto } from "@lifeos/shared";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { categorizeNotificationSchema, createTransactionSchema, emailTextSchema, importEmailSchema, importNotificationSchema, transactionListQuerySchema, type CategorizeNotificationDto, type CreateTransactionDto, type EmailTextDto, type ImportEmailDto, type ImportNotificationDto, type TransactionListQuery } from "@lifeos/shared";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser } from "../auth/decorators/current-user.decorator";
 import type { AuthUser } from "../auth/types";
@@ -12,13 +12,18 @@ export class TransactionsController {
   constructor(private readonly transactions: TransactionsService) {}
 
   @Get()
-  async list(@CurrentUser() user: AuthUser) {
-    return { transactions: await this.transactions.list(user.id) };
+  async list(@CurrentUser() user: AuthUser, @Query(new ZodBody(transactionListQuerySchema)) query: TransactionListQuery) {
+    return this.transactions.list(user.id, query.cursor);
   }
 
   @Get("summary")
   async summary(@CurrentUser() user: AuthUser) {
     return { summary: await this.transactions.summary(user.id) };
+  }
+
+  @Get("trend")
+  async trend(@CurrentUser() user: AuthUser) {
+    return { trend: await this.transactions.trend(user.id) };
   }
 
   @Post()

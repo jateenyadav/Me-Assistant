@@ -2,9 +2,20 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 require("reflect-metadata");
 const { Types } = require("mongoose");
-const { createTransactionSchema, importNotificationSchema, categorizeNotificationSchema, emailTextSchema, importEmailSchema, parseRupeeAmount } = require("@lifeos/shared");
+const { createTransactionSchema, importNotificationSchema, categorizeNotificationSchema, emailTextSchema, importEmailSchema, parseRupeeAmount, transactionListQuerySchema } = require("@lifeos/shared");
 const { TransactionsService } = require("../dist/transactions/transactions.service");
+const { TransactionSchema } = require("../dist/transactions/schemas/transaction.schema");
+const { UpiMappingSchema } = require("../dist/transactions/schemas/upi-mapping.schema");
+const { RefreshTokenSchema } = require("../dist/auth/schemas/refresh-token.schema");
+const { GoogleLoginTicketSchema } = require("../dist/auth/schemas/google-auth-attempt.schema");
 const { parseEmailPayment } = require("../dist/transactions/email-payment.parser");
+
+test("finance and auth ownership fields use a real ObjectId schema type", () => {
+  assert.equal(TransactionSchema.path("userId").instance, "ObjectId");
+  assert.equal(UpiMappingSchema.path("userId").instance, "ObjectId");
+  assert.equal(RefreshTokenSchema.path("userId").instance, "ObjectId");
+  assert.equal(GoogleLoginTicketSchema.path("userId").instance, "ObjectId");
+});
 
 test("email parser accepts one completed INR payment and rejects ambiguous or unpaid messages", () => {
   assert.deepEqual(parseEmailPayment("Your bill payment was successful. Paid INR 1,234.50."), { amountMinor: 123450, type: "expense" });
@@ -74,8 +85,13 @@ test("transaction schema rejects invalid amounts, categories, and client-supplie
   }
 });
 
-test("list filters by authenticated user ID and limits results", async () => {
+test("list filters by authenticated user ID and uses an exclusive tie-break cursor", async () => {
   const userId = new Types.ObjectId().toString();
+  const timestamp = new Date("2026-09-20T12:00:00.000Z");
+  const documents = Array.from({ length: 51 }, () => ({
+    _id: new Types.ObjectId(), occurredAt: timestamp, createdAt: timestamp,
+    amountMinor: 100, type: "expense", category: "food", currency: "INR", source: "manual",
+  }));
   let filter;
   let sort;
   let limit;
@@ -84,17 +100,61 @@ test("list filters by authenticated user ID and limits results", async () => {
       filter = query;
       return {
         sort: (order) => { sort = order; return {
-          limit: (count) => { limit = count; return { exec: async () => [] }; },
+          limit: (count) => { limit = count; return { exec: async () => documents }; },
         }; },
       };
     },
   };
-  const result = await new TransactionsService(model).list(userId);
-  assert.deepEqual(result, []);
+  const service = new TransactionsService(model);
+  const result = await service.list(userId);
+  assert.equal(result.transactions.length, 50);
+  assert.match(result.nextCursor, /^[A-Za-z0-9_-]+$/);
   assert.equal(filter.userId.toString(), userId);
   assert.deepEqual(filter.category, { $exists: true });
   assert.deepEqual(sort, { occurredAt: -1, _id: -1 });
-  assert.equal(limit, 50);
+  assert.equal(limit, 51);
+  await service.list(userId, result.nextCursor);
+  assert.equal(filter.userId.toString(), userId);
+  assert.equal(filter.$or[0].occurredAt.$lt.toISOString(), timestamp.toISOString());
+  assert.equal(filter.$or[1].occurredAt.toISOString(), timestamp.toISOString());
+  assert.equal(filter.$or[1]._id.$lt.toString(), documents[49]._id.toString());
+  assert.equal(transactionListQuerySchema.safeParse({ cursor: result.nextCursor, userId }).success, false);
+  for (const invalid of ["bad!", "a".repeat(257), Buffer.from("not json").toString("base64url"),
+    Buffer.from(JSON.stringify(["2026-02-30T12:00:00.000Z", documents[0]._id.toString()])).toString("base64url")]) {
+    await assert.rejects(service.list(userId, invalid), { status: 400 });
+  }
+});
+
+test("six-month trend uses user-scoped UTC months, exact paise, and fills missing months", async () => {
+  const userId = new Types.ObjectId().toString();
+  const now = new Date("2026-09-26T10:00:00.000Z");
+  let pipeline;
+  const model = { aggregate: (query) => {
+    pipeline = query;
+    return { exec: async () => [
+      { _id: { month: new Date("2026-04-01T00:00:00.000Z"), type: "expense" }, totalMinor: { toString: () => "12501" } },
+      { _id: { month: new Date("2026-09-01T00:00:00.000Z"), type: "income" }, totalMinor: { toString: () => "501" } },
+    ] };
+  } };
+  const trend = await new TransactionsService(model).trend(userId, now);
+  assert.equal(pipeline[0].$match.userId.toString(), userId);
+  assert.deepEqual(pipeline[0].$match.category, { $exists: true });
+  assert.equal(pipeline[0].$match.occurredAt.$gte.toISOString(), "2026-04-01T00:00:00.000Z");
+  assert.equal(pipeline[0].$match.occurredAt.$lte.toISOString(), now.toISOString());
+  assert.equal(pipeline[1].$group._id.month.$dateTrunc.timezone, "UTC");
+  assert.deepEqual(pipeline[1].$group.totalMinor, { $sum: { $toDecimal: "$amountMinor" } });
+  assert.deepEqual(trend.months, [
+    { month: "2026-04", expenseMinor: 12501, incomeMinor: 0 },
+    { month: "2026-05", expenseMinor: 0, incomeMinor: 0 },
+    { month: "2026-06", expenseMinor: 0, incomeMinor: 0 },
+    { month: "2026-07", expenseMinor: 0, incomeMinor: 0 },
+    { month: "2026-08", expenseMinor: 0, incomeMinor: 0 },
+    { month: "2026-09", expenseMinor: 0, incomeMinor: 501 },
+  ]);
+  const overflow = { aggregate: () => ({ exec: async () => [
+    { _id: { month: new Date("2026-09-01T00:00:00.000Z"), type: "expense" }, totalMinor: { toString: () => "9007199254740992" } },
+  ] }) };
+  await assert.rejects(new TransactionsService(overflow).trend(userId, now), { status: 500 });
 });
 
 test("30-day summary uses a user-scoped date window, excludes pending imports and sums exact paise", async () => {

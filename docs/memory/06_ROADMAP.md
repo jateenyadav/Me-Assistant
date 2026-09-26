@@ -1,9 +1,9 @@
 # 06 — Roadmap (tick off live)
 
-Normally complete and commit a phase before starting the next. Owner explicitly
-requested development-first on 2026-09-23: finance groundwork may proceed while
-Phase 0 deployment and Google live consent remain open. Do not mark Phase 0
-complete or the teaching checkpoint checked until they actually happen.
+Owner requested on 2026-09-26 that implementation proceed across the whole
+project rather than gating on one phase. Items are checked only after their
+specific code and validation exist; a locally tested module is not a release.
+Deployment, live credentials, store approvals, and teaching stay unchecked.
 
 - [ ] **Phase 0 — Foundation** _(in progress)_
   - [x] Repo + persistent-context memory system live
@@ -35,15 +35,39 @@ complete or the teaching checkpoint checked until they actually happen.
   - [x] Push validated finance/mobile slice to confirmed `Me-Assistant` origin
   - [x] Rolling 30-day user-scoped totals and category breakdown across all
     completed transactions; API tests, Atlas HTTP smoke and web build pass
-  - [ ] Email ingestion and duplicate handling; iOS fallback
-  - [ ] History paging, longer-term trends and broader dashboard
+  - [x] iOS Flutter runner + manual review-first email fallback; `flutter analyze`,
+    widget test, simulator build and sign-in screen launch verified
+  - [ ] Consented automatic email ingestion and cross-source duplicate reconciliation
+  - [x] Indexed, 50-item cursor-paged history + 6-month UTC income/expense trend;
+    finance tests, API/web typechecks, web build and Atlas HTTP smoke pass
 - [ ] **Phase 2 — Diet** — USDA + Open Food Facts, food search + logging + barcode scan
+  - [x] Server-side USDA search and Open Food Facts barcode **lookup**, manual/catalog
+    food entries and 30-day macro/calorie rollup on web; API and Atlas tests
+  - [ ] Live USDA/OFF credential checks, camera scanning, micros/recipes and daily analytics
 - [ ] **Phase 3 — Workout** — wger/ExerciseDB integrated, workout builder, rest timers
+  - [x] Live wger catalog endpoint checked; web set/rep/weight logging,
+    straight/superset/circuit structure and rest timer; lifetime per-exercise
+    heaviest logged weight/volume with API and Atlas ownership tests
+  - [ ] Robust multi-exercise builder, dated PR/volume trends, mobile workout screens
 - [ ] **Phase 4 — Medication, notes, reminders** — CRUD + notifications
+  - [x] Owner-scoped API/web CRUD for medication schedules/intake, notes, and
+    recurring reminder definitions; medication ownership tested over HTTP
+  - [ ] OS delivery/scheduling, missed-dose workflow, audit-grade medication safety
 - [ ] **Phase 5 — AI layer** — MCP server + core tools, built-in assistant reusing them, RAG for notes, BYOK settings, Bedrock default
+  - [x] Shared tool execution, opt-in scoped/revocable MCP bearer tokens and HTTP
+    endpoint; built-in read-only AI chat with consent and encrypted BYOK settings;
+    unit and HTTP MCP tests
+  - [ ] Notes vector RAG, production MCP OAuth/client interoperability,
+    live provider tests/Bedrock credentials, prompt-injection evaluation
 - [ ] **Phase 6 — Goals** — reads real data via the Phase 5 MCP tools to prioritize/track
+  - [x] Web goal CRUD and deterministic owner-scoped progress for supported
+    finance/diet/workout/medication units; unsupported goals clearly flagged
+  - [ ] Cross-domain reasoning, scheduled daily priority recomputation
 - [ ] **Phase 7 — Polish** — Redis caching, offline-first mobile sync, realtime alerts hardened
 - [ ] **Phase 8 — Payments + scale pass** — Razorpay (Pro tier placeholder), scale walkthrough per module
 - [ ] **Phase 9 — Hardening** — tests on money/medication, security pass on API-key storage + MCP auth, CI/CD
+  - [x] Local money/medication/MCP/AI tests and Atlas HTTP isolation smoke;
+    basic GitHub Actions build/typecheck/unit/Flutter workflow added
+  - [ ] Workflow run on remote, key rotation, audit and security test, deploy pipeline
 - [ ] **Phase 10 — Store submission** — privacy policy, permission declarations, listings (start early)
 - [ ] **Phase 11 (stretch) — Desktop** — Electron wrapper around the web dashboard

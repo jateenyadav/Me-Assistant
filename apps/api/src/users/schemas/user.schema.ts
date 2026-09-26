@@ -30,6 +30,9 @@ export class User {
   @Prop({ type: ProfileSchema, default: {} })
   profile!: Profile;
 
+  @Prop({ type: Boolean, required: true, default: false })
+  mcpEnabled!: boolean;
+
   createdAt!: Date;
   updatedAt!: Date;
 }

@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { User, UserDocument } from "./schemas/user.schema";
+import type { UpdateProfileDto } from "@lifeos/shared";
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,15 @@ export class UsersService {
 
   findById(id: string): Promise<UserDocument | null> {
     return this.userModel.findById(id).exec();
+  }
+
+  updateProfile(id: string, input: UpdateProfileDto): Promise<UserDocument | null> {
+    const fields = Object.fromEntries(Object.entries(input).map(([key, value]) => [`profile.${key}`, value]));
+    return this.userModel.findByIdAndUpdate(id, { $set: fields }, { returnDocument: "after", runValidators: true }).exec();
+  }
+
+  updateMcpEnabled(id: string, enabled: boolean): Promise<UserDocument | null> {
+    return this.userModel.findByIdAndUpdate(id, { $set: { mcpEnabled: enabled } }, { returnDocument: "after" }).exec();
   }
 
   create(email: string, passwordHash: string): Promise<UserDocument> {

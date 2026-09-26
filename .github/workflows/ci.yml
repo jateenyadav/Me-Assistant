@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c # v2.0.0
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
+      - run: node --test apps/api/scripts/google-auth-test.cjs apps/api/scripts/finance-test.cjs apps/api/scripts/life-test.cjs apps/api/scripts/catalog-test.cjs apps/api/scripts/mcp-test.cjs apps/api/scripts/ai-test.cjs
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.8
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test

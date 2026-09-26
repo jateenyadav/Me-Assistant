@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import type { PublicUser } from "@lifeos/shared";
 import { logout, me } from "@/lib/auth";
 import { FinancePanel } from "@/components/FinancePanel";
+import { LifeHub } from "@/components/LifeHub";
+import { ProfilePanel } from "@/components/ProfilePanel";
+import { AiPanel } from "@/components/AiPanel";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -50,6 +53,9 @@ export default function DashboardPage() {
         <div><span className="muted">{user.email}</span><button onClick={onLogout}>Log out</button></div>
       </header>
       <FinancePanel />
+      <ProfilePanel user={user} onUpdate={setUser} />
+      <LifeHub />
+      <AiPanel />
     </main>
   );
 }

@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument, Types } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 import type { PendingNotification, PublicTransaction } from "@lifeos/shared";
 
 export type TransactionDocument = HydratedDocument<Transaction>;
 
 @Schema({ timestamps: true })
 export class Transaction {
-  @Prop({ type: Types.ObjectId, required: true, ref: "User" })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: "User" })
   userId!: Types.ObjectId;
 
   @Prop({ type: Number, required: true, min: 1 })

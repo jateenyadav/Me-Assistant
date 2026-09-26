@@ -11,7 +11,7 @@ exposed as an MCP server.
 ```
 apps/api      NestJS backend (@lifeos/api)
 apps/web      Next.js App Router dashboard (@lifeos/web)
-apps/mobile   Flutter/Android notification-capture prototype
+apps/mobile   Flutter: Android capture + iOS email fallback
 packages/shared  @lifeos/shared — shared TS types + Zod DTOs
 docs/memory   persistent project context (the "memory bank")
 ```
@@ -36,7 +36,16 @@ pnpm --filter @lifeos/web dev             # http://localhost:3000
 Needs Node ≥22 (Google's auth library requires it), pnpm, and MongoDB
 (local `mongodb://127.0.0.1:27017/lifeos` or Atlas).
 
-## Finance (current slice)
+## Current local capabilities (not a release)
+The authenticated web dashboard includes finance, food, workout, medication,
+notes, reminder, goal and AI/MCP settings. Strict owner-scoped APIs back the
+forms; food/exercise catalogs require the provider configuration described in
+`apps/api/.env.example`. AI model requests require explicit user consent and
+working Bedrock credentials or a saved encrypted provider key and model ID.
+Notes RAG, OS reminders, full mobile parity and live AI requests are not built
+or verified. See `docs/memory/03_PROGRESS.md` for exact tests and blockers.
+
+## Finance
 Sign in and open `/dashboard` to add INR expenses or income and see your 50 most
 recent transactions. Amounts are entered in rupees and stored as integer paise;
 only your account can access its records. The dashboard shows rolling 30-day
@@ -48,8 +57,10 @@ detected INR amount and direction, enter the real payment time and category, and
 confirm. The API rejects ambiguous/unpaid text, doesn't store the raw message and
 deduplicates exact same-message/same-time retries per account. Pasted text is
 user-supplied, not sender-verified; avoid importing a payment already captured on
-Android. No mailbox sync, native iOS email flow, physical-device notification
-verification, cross-source deduplication or broader analytics is built yet.
+Android. No mailbox sync, physical-device notification verification or
+cross-source deduplication is built yet. The iOS Flutter app now offers manual
+email preview/time/category confirmation; its sign-in screen launched in the
+simulator, but the signed-in flow is not verified on device.
 
 ## Google sign-in (optional)
 1. In Google Cloud Console, configure the OAuth consent screen and create an OAuth 2.0

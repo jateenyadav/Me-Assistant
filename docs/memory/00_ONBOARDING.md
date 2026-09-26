@@ -15,6 +15,9 @@ interviews. The project has **two deliverables**: working code **and** the conce
 behind it. **Owner update (2026-09-23):** develop now and do the learning walkthrough
 at the end. Record pending concepts as code is built; do not claim they were taught
 or gate implementation on teach-back. Treat `04_LEARNING_LOG.md` as first-class.
+**Owner update (2026-09-26):** stop the one-feature/one-phase-at-a-time plan;
+work across the entire project in a coordinated pass. Still validate each
+boundary, and never call an externally blocked release complete.
 
 ## Session START protocol (every session, no exceptions)
 1. Read this file, then what it points to for today's task — at minimum
@@ -32,7 +35,7 @@ or gate implementation on teach-back. Treat `04_LEARNING_LOG.md` as first-class.
 6. Tell the user to commit.
 
 ## Learning backlog protocol (deferred at owner's request)
-Build vertical slices now. For each new concept (JWT rotation, money representation,
+Build integrated modules now. For each new concept (JWT rotation, money representation,
 queues, MCP, …), record what to teach and where in `04_LEARNING_LOG.md`, marked
 **pending lesson**. In the final learning phase cover what it is & why here,
 2–3 alternatives + trade-offs, what changes at 100k users, and the interview angle.

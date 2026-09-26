@@ -9,7 +9,9 @@ import {
   transactionCategories,
   type CreateTransactionDto,
   type FinanceSummary,
+  type FinanceTrend,
   type PublicTransaction,
+  type TransactionPage,
 } from "@lifeos/shared";
 import { authenticatedFetch } from "@/lib/auth";
 
@@ -28,10 +30,28 @@ async function getSummary(): Promise<FinanceSummary> {
   return result.summary;
 }
 
+async function getTrend(): Promise<FinanceTrend> {
+  const response = await authenticatedFetch("/transactions/trend");
+  if (!response.ok) throw new Error(await readError(response));
+  const result = (await response.json()) as { trend: FinanceTrend };
+  return result.trend;
+}
+
+async function getTransactionPage(cursor?: string): Promise<TransactionPage> {
+  const response = await authenticatedFetch(`/transactions${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`);
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as TransactionPage;
+}
+
 export function FinancePanel() {
   const [transactions, setTransactions] = useState<PublicTransaction[]>([]);
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [trend, setTrend] = useState<FinanceTrend | null>(null);
+  const [trendError, setTrendError] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,25 +65,51 @@ export function FinancePanel() {
   const [emailDate, setEmailDate] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const trendPeak = Math.max(1, ...(trend?.months.map((month) => Math.max(month.expenseMinor, month.incomeMinor)) ?? []));
 
-  function refreshSummary() {
+  function refreshAnalytics() {
     void getSummary().then((result) => { setSummary(result); setSummaryError(null); })
       .catch((reason: unknown) => setSummaryError(reason instanceof Error ? reason.message : "Could not load summary"));
+    void getTrend().then((result) => { setTrend(result); setTrendError(null); })
+      .catch((reason: unknown) => setTrendError(reason instanceof Error ? reason.message : "Could not load trend"));
+  }
+
+  function refreshHistory() {
+    void getTransactionPage()
+      .then((page) => { setTransactions(page.transactions); setNextCursor(page.nextCursor); setHistoryError(null); })
+      .catch((reason: unknown) => setHistoryError(`Saved, but history could not refresh: ${reason instanceof Error ? reason.message : "try reloading"}`));
+  }
+
+  async function loadMore() {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    setHistoryError(null);
+    try {
+      const page = await getTransactionPage(nextCursor);
+      setTransactions((previous) => {
+        const seen = new Set(previous.map((transaction) => transaction.id));
+        return [...previous, ...page.transactions.filter((transaction) => !seen.has(transaction.id))];
+      });
+      setNextCursor(page.nextCursor);
+    } catch (reason) {
+      setHistoryError(reason instanceof Error ? reason.message : "Could not load older transactions");
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   useEffect(() => {
     let active = true;
-    authenticatedFetch("/transactions")
-      .then(async (response) => {
-        if (!response.ok) throw new Error(await readError(response));
-        return (await response.json()) as { transactions: PublicTransaction[] };
-      })
-      .then((result) => { if (active) setTransactions(result.transactions); })
+    getTransactionPage()
+      .then((page) => { if (active) { setTransactions(page.transactions); setNextCursor(page.nextCursor); } })
       .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load transactions"); })
       .finally(() => { if (active) setLoading(false); });
     getSummary()
       .then((result) => { if (active) setSummary(result); })
       .catch((reason: unknown) => { if (active) setSummaryError(reason instanceof Error ? reason.message : "Could not load summary"); });
+    getTrend()
+      .then((result) => { if (active) setTrend(result); })
+      .catch((reason: unknown) => { if (active) setTrendError(reason instanceof Error ? reason.message : "Could not load trend"); });
     return () => { active = false; };
   }, []);
 
@@ -97,8 +143,9 @@ export function FinancePanel() {
       });
       if (!response.ok) throw new Error(await readError(response));
       const { transaction } = (await response.json()) as { transaction: PublicTransaction };
-      setTransactions((previous) => [transaction, ...previous].slice(0, 50));
-      refreshSummary();
+      setTransactions((previous) => [transaction, ...previous]);
+      refreshHistory();
+      refreshAnalytics();
       setAmount("");
       setNote("");
     } catch (reason) {
@@ -150,9 +197,9 @@ export function FinancePanel() {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(parsed.data),
       });
       if (!response.ok) throw new Error(await readError(response));
-      const { transaction } = (await response.json()) as { transaction: PublicTransaction };
-      setTransactions((previous) => [transaction, ...previous.filter((item) => item.id !== transaction.id)].slice(0, 50));
-      refreshSummary();
+      await response.json();
+      refreshHistory();
+      refreshAnalytics();
       setEmailText("");
       setEmailReview(null);
       setEmailDate("");
@@ -189,7 +236,26 @@ export function FinancePanel() {
           </>
         ) : !summaryError && <p className="muted">Loading summary…</p>}
       </section>
-      <p className="muted">Add a transaction manually. Automatic capture comes later.</p>
+      <section className="finance-summary" aria-labelledby="finance-trend-heading">
+        <h3 id="finance-trend-heading">Monthly activity · last 6 calendar months (UTC)</h3>
+        {trendError && <p role="alert" className="error">Trend: {trendError}</p>}
+        {trend ? (
+          <ul className="finance-trend">
+            {trend.months.map(({ month, expenseMinor, incomeMinor }) => {
+              return (
+                <li key={month}>
+                  <strong>{new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-IN", { month: "short", year: "2-digit", timeZone: "UTC" })}</strong>
+                  <div className="finance-trend-bars">
+                    <span>Spent <span className="finance-trend-bar expense" aria-hidden="true" style={{ width: `${100 * expenseMinor / trendPeak}%` }} />{currency.format(expenseMinor / 100)}</span>
+                    <span>Received <span className="finance-trend-bar income" aria-hidden="true" style={{ width: `${100 * incomeMinor / trendPeak}%` }} />{currency.format(incomeMinor / 100)}</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : !trendError && <p className="muted">Loading monthly activity…</p>}
+      </section>
+      <p className="muted">Add a transaction manually, import a payment email, or review Android captures in the mobile app.</p>
       <form onSubmit={onSave}>
         <div className="finance-fields">
           <div>
@@ -256,6 +322,10 @@ export function FinancePanel() {
           ))}
         </ul>
       )}
+      {historyError && <p role="alert" className="error">{historyError}</p>}
+      {nextCursor && <button type="button" onClick={loadMore} disabled={loadingMore}>
+        {loadingMore ? "Loading…" : "Load older transactions"}
+      </button>}
     </section>
   );
 }

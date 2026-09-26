@@ -146,3 +146,102 @@ precomputed daily rollups speed up reads but require backfill, reconciliation,
 and correction logic when a payment is categorized late. At higher volume add a
 compound index that matches summary filters and consider per-day rollups only
 after measuring aggregation latency.
+
+## 2026-09-26 — Cursor-paged finance history and six-month UTC trends
+Use an exclusive `(occurredAt, _id)` cursor against the existing compound
+`(userId, occurredAt desc, _id desc)` index. Return at most 50 records with a
+`nextCursor` only when a 51st exists; validate the encoded cursor, and always
+scope database queries to the authenticated user rather than trusting the cursor
+for access control. Aggregate the current and preceding five calendar months in
+MongoDB using UTC `$dateTrunc` and Decimal128 paise, filling empty months in
+the API before rendering the web dashboard. The current month is partial.
+
+Alternatives: offset/skip pagination is simpler but slows at deep offsets and
+shifts under inserts; loading all history on the client uses unbounded memory;
+stored monthly rollups reduce repeated aggregate cost but require backfills
+and correction logic. An unsigned encoded cursor is sufficient here because
+it is not authorization: every read remains user-scoped, and a forged but
+valid cursor can only change where that user's list starts. At higher volume,
+measure query plans and roll up per-user monthly totals if needed.
+
+## 2026-09-26 — Use schema ObjectId types for persisted ownership fields
+Declare `userId` using `Schema.Types.ObjectId` in the finance and auth models;
+construct values with `new Types.ObjectId(id)` at runtime. The earlier use of
+`Types.ObjectId` as a schema type was actually `Mixed`: Mongoose did not cast
+IDs, and the bulk-insert smoke exposed string-owned rows missing from list
+queries. The change aligns query, stored document, and index key types.
+
+Alternatives: leave Mixed and manually convert at every write (fragile, no
+schema enforcement); store strings everywhere (migration of existing BSON IDs
+and larger indexes); use schema ObjectId with casting (smallest safe correction).
+Existing records written by the API already use BSON ObjectIds. If externally
+written string-owned records exist, audit and migrate them with explicit owner
+verification before relying on them in reads; this session did not migrate data.
+
+## 2026-09-26 — Cross-phase delivery without false release claims
+The owner's one-go request supersedes phase-gated implementation. Integrate
+modules together and validate their boundaries, but retain unchecked release
+criteria when provider accounts, physical devices or store approvals are absent.
+Alternative: a strict phase gate blocks independent work on deployment; calling
+local builds a finished release obscures risk. No automatic commits or pushes
+of an unreviewed multi-module working tree.
+
+## 2026-09-26 — Typed LifeRecord and measured goal progress
+Use a single owner-indexed collection with kind-specific validated payloads
+for initial diet/workout/medication/notes/reminders/goals flows. Compute
+supported progress from real owner records, flag unsupported units instead of
+inventing progress. Alternatives: separate collections per module enable
+specialized indexes and scaling (likely useful at 100k users); flexible
+unvalidated documents are easier but unsafe for medication and tenant data.
+Scheduled AI goal prioritization remains unimplemented.
+
+## 2026-09-26 — Fixed-host catalogs and bounded read-only AI
+USDA and OFF only expose reported nutrients; wger exercises cache in-process
+for one hour with bounded page fetches. Alternatives: hand-seeded foods mislead
+on coverage, repeated upstream queries cost latency, and Redis offers a
+shared multi-instance cache once necessary. AI reuses owner-scoped tool
+execution to gather bounded context with explicit request consent, but cannot
+write. Vector search for notes and adversarial prompt evaluation remain open;
+fully autonomous writes require stricter authorization and confirmations.
+
+## 2026-09-26 — Scoped MCP tokens and authenticated BYOK encryption
+The installed MCP v2 server uses stateless Streamable HTTP, short-lived
+revocable per-owner opaque tokens hashed at rest, and separate read/write
+scopes instead of sharing web JWTs. AES-256-GCM encrypts each BYOK key with
+a random IV, authentication tag and owner/provider associated data; provider
+model IDs come from deployment config. Alternatives: sharing web JWTs widens
+exposure; plaintext DB keys leak provider access; OAuth discovery is better
+for arbitrary public clients but is not implemented. At 100k users add token
+rate limits, audit logs, KMS rotation and interoperable OAuth.
+
+## 2026-09-26 — iOS runner with explicit email-paste fallback
+Generate Flutter's iOS runner, guard all Android-only notification channel
+calls and offer iOS preview/time/category confirmation for pasted payments.
+The simulator uses localhost in debug; releases require HTTPS. Alternatives:
+web-only iOS fallback cannot satisfy app delivery; Android's listener cannot
+serve iOS; automatic mailbox sync requires separate OAuth consent, provider
+credentials and robust deduplication. Manual paste is not automatic ingestion.
+
+## 2026-09-26 — Local-feedback CI without production credentials
+Add GitHub Actions with read-only repository access, pnpm lockfile install,
+API/web build/typecheck/unit tests and Linux Flutter tests. No Atlas or
+provider secrets are required for this first workflow. Alternatives: builds
+alone miss authorization regressions; running real production credentials
+on arbitrary PRs risks leaking them. At scale add isolated temporary DB
+integration tests, macOS iOS builds and signed deployment gates.
+
+## 2026-09-26 — Server-side rolling nutrition summary
+Aggregate all owner-scoped food logs in the rolling 30-day window in MongoDB,
+using decimal conversion for nutrient totals and explicit range checks. A
+recent-list sum silently misses logs after the 100-record display limit;
+client download is unbounded; a materialized daily rollup is faster but needs
+corrections on edits and deletions. At 100k users benchmark the existing
+owner/kind/time index and consider pre-aggregation when measurements justify it.
+
+## 2026-09-26 — Bounded server-side workout volume
+Group owner-scoped logged exercise sets by entered exercise name in MongoDB;
+return the top 30 by lifetime repetitions × weight volume and heaviest
+logged weight. Time-only or unweighted sets add zero volume, not invented
+resistance. Alternatives: recent 100-workout client sums lose older history;
+downloading all sessions is unbounded; daily rollups need edit/delete
+correction. At 100k users normalize exercise IDs and add dated PR trends.

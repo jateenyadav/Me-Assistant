@@ -16,6 +16,18 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().url().optional(),
+  USDA_API_KEY: z.string().min(1).optional(),
+  OPEN_FOOD_FACTS_CONTACT: z.email().optional(),
+  API_PUBLIC_HOST: z.string().regex(/^[a-z0-9.-]+$/).optional(),
+  AI_ENCRYPTION_KEY: z.string().refine((value) => {
+    const decoded = Buffer.from(value, "base64");
+    return decoded.length === 32 && decoded.toString("base64") === value;
+  }, "AI_ENCRYPTION_KEY must be a base64-encoded 32-byte secret").optional(),
+  AWS_REGION: z.string().optional(),
+  BEDROCK_MODEL_ID: z.string().optional(),
+  OPENAI_MODEL_ID: z.string().optional(),
+  ANTHROPIC_MODEL_ID: z.string().optional(),
+  GOOGLE_MODEL_ID: z.string().optional(),
 }).superRefine((env, context) => {
   const configured = [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET, env.GOOGLE_REDIRECT_URI];
   if (configured.some(Boolean) && !configured.every(Boolean)) {

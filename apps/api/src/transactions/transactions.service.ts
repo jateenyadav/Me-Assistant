@@ -3,7 +3,7 @@ import { BadRequestException, ConflictException, Injectable, InternalServerError
 import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { transactionCategories, type CreateTransactionDto, type FinanceSummary, type ImportEmailDto, type ImportNotificationDto, type PendingNotification, type PublicTransaction } from "@lifeos/shared";
+import { transactionCategories, type CreateTransactionDto, type FinanceSummary, type FinanceTrend, type ImportEmailDto, type ImportNotificationDto, type PendingNotification, type PublicTransaction, type TransactionPage } from "@lifeos/shared";
 import { Transaction, TransactionDocument, toPendingNotification, toPublicTransaction } from "./schemas/transaction.schema";
 import { UpiMapping, UpiMappingDocument } from "./schemas/upi-mapping.schema";
 import { parseEmailPayment } from "./email-payment.parser";
@@ -57,13 +57,55 @@ export class TransactionsService {
     return toPublicTransaction(transaction);
   }
 
-  async list(userId: string): Promise<PublicTransaction[]> {
+  async list(userId: string, cursor?: string): Promise<TransactionPage> {
+    const after = cursor ? this.decodeCursor(cursor) : null;
     const transactions = await this.transactions
-      .find({ userId: new Types.ObjectId(userId), category: { $exists: true } })
+      .find({
+        userId: new Types.ObjectId(userId), category: { $exists: true },
+        ...(after ? { $or: [
+          { occurredAt: { $lt: after.occurredAt } },
+          { occurredAt: after.occurredAt, _id: { $lt: after.id } },
+        ] } : {}),
+      })
       .sort({ occurredAt: -1, _id: -1 })
-      .limit(50)
+      .limit(51)
       .exec();
-    return transactions.map(toPublicTransaction);
+    const page = transactions.slice(0, 50);
+    const last = page.at(-1);
+    return {
+      transactions: page.map(toPublicTransaction),
+      nextCursor: transactions.length > 50 && last
+        ? Buffer.from(JSON.stringify([last.occurredAt.toISOString(), last._id.toString()])).toString("base64url")
+        : null,
+    };
+  }
+
+  async trend(userId: string, to = new Date()): Promise<FinanceTrend> {
+    const from = new Date(Date.UTC(to.getUTCFullYear(), to.getUTCMonth() - 5, 1));
+    const months = Array.from({ length: 6 }, (_, index) => {
+      const month = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + index, 1)).toISOString().slice(0, 7);
+      return { month, expenseMinor: 0, incomeMinor: 0 };
+    });
+    const byMonth = new Map(months.map((month) => [month.month, month]));
+    const groups = await this.transactions.aggregate<{
+      _id: { month: Date; type: PublicTransaction["type"] };
+      totalMinor: { toString(): string };
+    }>([
+      { $match: { userId: new Types.ObjectId(userId), category: { $exists: true }, occurredAt: { $gte: from, $lte: to } } },
+      { $group: { _id: { month: { $dateTrunc: { date: "$occurredAt", unit: "month", timezone: "UTC" } }, type: "$type" },
+        totalMinor: { $sum: { $toDecimal: "$amountMinor" } } } },
+    ]).exec();
+    for (const group of groups) {
+      const month = byMonth.get(group._id.month.toISOString().slice(0, 7));
+      if (!month || (group._id.type !== "expense" && group._id.type !== "income")) {
+        throw new InternalServerErrorException("Invalid finance trend group");
+      }
+      const amountMinor = this.safeMinor(group.totalMinor);
+      const key = group._id.type === "expense" ? "expenseMinor" : "incomeMinor";
+      month[key] += amountMinor;
+      if (!Number.isSafeInteger(month[key])) throw new InternalServerErrorException("Finance total exceeds supported range");
+    }
+    return { months };
   }
 
   async summary(userId: string, to = new Date()): Promise<FinanceSummary> {
@@ -78,9 +120,7 @@ export class TransactionsService {
     const totals = { expenseMinor: 0, incomeMinor: 0 };
     const byCategory = new Map<PublicTransaction["category"], number>();
     for (const group of groups) {
-      const raw = group.totalMinor.toString();
-      const amountMinor = /^\d+$/.test(raw) ? Number(raw) : NaN;
-      if (!Number.isSafeInteger(amountMinor)) throw new InternalServerErrorException("Finance total exceeds supported range");
+      const amountMinor = this.safeMinor(group.totalMinor);
       if (group._id.type === "expense") {
         if (!transactionCategories.includes(group._id.category)) throw new InternalServerErrorException("Unknown finance category");
         byCategory.set(group._id.category, amountMinor);
@@ -167,6 +207,30 @@ export class TransactionsService {
   private hashUpi(userId: string, upiId: string): string {
     return createHmac("sha256", this.config.getOrThrow<string>("JWT_ACCESS_SECRET"))
       .update(`finance-upi:v1:${userId}:${upiId.toLowerCase()}`).digest("hex");
+  }
+
+  private decodeCursor(cursor: string): { occurredAt: Date; id: Types.ObjectId } {
+    try {
+      if (cursor.length > 256 || !/^[A-Za-z0-9_-]+$/.test(cursor)) throw new Error("Invalid encoding");
+      const decoded = Buffer.from(cursor, "base64url");
+      if (decoded.toString("base64url") !== cursor) throw new Error("Invalid encoding");
+      const value: unknown = JSON.parse(decoded.toString("utf8"));
+      if (!Array.isArray(value) || value.length !== 2 || typeof value[0] !== "string" ||
+        typeof value[1] !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(value[0]) ||
+        !/^[a-f0-9]{24}$/.test(value[1])) throw new Error("Invalid cursor");
+      const occurredAt = new Date(value[0]);
+      if (Number.isNaN(occurredAt.getTime()) || occurredAt.toISOString() !== value[0]) throw new Error("Invalid date");
+      return { occurredAt, id: new Types.ObjectId(value[1]) };
+    } catch {
+      throw new BadRequestException("Invalid transaction cursor");
+    }
+  }
+
+  private safeMinor(total: { toString(): string }): number {
+    const raw = total.toString();
+    const amountMinor = /^\d+$/.test(raw) ? Number(raw) : NaN;
+    if (!Number.isSafeInteger(amountMinor)) throw new InternalServerErrorException("Finance total exceeds supported range");
+    return amountMinor;
   }
 
   private isDuplicateKey(error: unknown): boolean {

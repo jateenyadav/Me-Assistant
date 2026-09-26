@@ -157,6 +157,13 @@ a {
 .finance-breakdown { list-style: none; padding: 0; margin: 0; }
 .finance-breakdown li { display: grid; grid-template-columns: 95px minmax(20px, 1fr) auto; align-items: center; gap: 12px; margin: 8px 0; text-transform: capitalize; font-size: 13px; }
 .finance-breakdown-bar { display: block; height: 8px; background: var(--accent); border-radius: 4px; }
+.finance-trend { list-style: none; margin: 0; padding: 0; }
+.finance-trend li { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 12px; align-items: center; padding: 8px 0; font-size: 13px; }
+.finance-trend-bars { display: grid; gap: 5px; }
+.finance-trend-bars > span { display: grid; grid-template-columns: 70px minmax(10px, 1fr) minmax(95px, auto); align-items: center; gap: 8px; }
+.finance-trend-bar { display: block; height: 8px; border-radius: 4px; }
+.finance-trend-bar.expense { background: #ff9292; }
+.finance-trend-bar.income { background: #81d9a6; }
 
 .finance-fields {
   display: grid;
@@ -195,6 +202,30 @@ a {
 
 .finance-list .expense { color: #ff9292; }
 .finance-list .income { color: #81d9a6; }
+
+.life-card h2 { margin: 0 0 16px; }
+.life-card h3 { margin: 24px 0 10px; font-size: 17px; }
+.life-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.life-tabs button, .life-actions button, .life-inline button, .life-results button, .life-secondary { width: auto; margin: 0; padding: 9px 12px; }
+.life-tabs button { background: var(--panel); border: 1px solid var(--border); }
+.life-tabs button.selected { background: var(--accent); }
+.life-card select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+.life-catalog { margin: 20px 0; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.life-inline { display: flex; gap: 8px; margin: 10px 0; }
+.life-inline button { white-space: nowrap; }
+.life-results { padding: 0; margin: 12px 0; list-style: none; }
+.life-results li { display: flex; gap: 16px; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding: 10px 0; }
+.life-results .muted { display: block; margin: 5px 0 0; }
+.life-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.life-actions button, .life-secondary { background: var(--panel); border: 1px solid var(--border); }
+.ai-card select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+.ai-section { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 10px; }
+.ai-section h3 { margin: 10px 0; }
+.ai-consent { display: flex; align-items: flex-start; gap: 8px; }
+.ai-consent input { width: auto; }
+.ai-answer { white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-top: 16px; }
+.ai-secondary { background: var(--panel); border: 1px solid var(--border); }
+.ai-card code { overflow-wrap: anywhere; }
 
 @media (max-width: 640px) {
   .finance-fields { grid-template-columns: 1fr; gap: 0; }

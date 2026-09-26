@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Patch,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -16,6 +17,8 @@ import {
   type RegisterDto,
   type RefreshDto,
   type LogoutDto,
+  updateProfileSchema,
+  type UpdateProfileDto,
 } from "@lifeos/shared";
 import { ZodBody } from "../common/zod-validation.pipe";
 import { UsersService } from "../users/users.service";
@@ -59,6 +62,13 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() principal: AuthUser) {
     const user = await this.users.findById(principal.id);
+    return { user: user ? toPublicUser(user) : null };
+  }
+
+  @Patch("profile")
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@CurrentUser() principal: AuthUser, @Body(new ZodBody(updateProfileSchema)) input: UpdateProfileDto) {
+    const user = await this.users.updateProfile(principal.id, input);
     return { user: user ? toPublicUser(user) : null };
   }
 }

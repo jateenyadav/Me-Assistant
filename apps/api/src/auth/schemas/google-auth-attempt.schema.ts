@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument, Types } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 
 export type GoogleAuthAttemptDocument = HydratedDocument<GoogleAuthAttempt>;
 
@@ -29,7 +29,7 @@ export class GoogleLoginTicket {
   @Prop({ required: true, unique: true })
   ticketHash!: string;
 
-  @Prop({ type: Types.ObjectId, required: true, ref: "User" })
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: "User" })
   userId!: Types.ObjectId;
 
   @Prop({ required: true })

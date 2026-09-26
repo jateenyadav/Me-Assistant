@@ -8,12 +8,12 @@
 | Backend | **NestJS (TS)** | Modules, DI, guards, interceptors — the enterprise patterns interviewers probe |
 | DB | MongoDB Atlas (Mongoose) | Flexible schema fits notes/reminders/goals; user already knows it |
 | Auth | Custom JWT (access + refresh, rotated, hashed at rest) | Most-interviewed backend topic; teaches the mechanism under Firebase Auth |
-| Cache | Redis (ioredis) | Sessions, hot nutrition/exercise lookups, AI response cache, notif de-dup |
-| Queue | BullMQ (Redis-backed) | Decouples "notification arrived" from "transaction processed" |
-| Realtime | Socket.io | Pushes the "what was this for?" alert instantly |
+| Cache (planned) | Redis | Shared catalogs/rollups; currently wger has only a process-local cache |
+| Queue (planned) | BullMQ | Scheduled reminders/goal computation; no queue is currently deployed |
+| Realtime (planned) | Socket.io | Push prompts; currently Android raises a local open-the-app alert |
 | AI | LangChain over multiple providers; **AWS Bedrock (Mumbai) default**, OpenAI/Anthropic/Google via BYOK; **MCP server** | One abstraction, swappable providers |
-| Payments | Razorpay | Native UPI, standard for Indian apps, free test mode |
-| Deploy (MVP) | Render/Railway (API) + Vercel (web) + Atlas free tier | (deferred until accounts ready) |
+| Payments (planned) | Razorpay | Requires owner merchant setup and webhook verification |
+| Deploy (planned) | API/web hosting + Atlas | Deferred until owner accounts/secrets are available |
 
 ## Monorepo layout (pnpm + Turborepo)
 ```
@@ -21,7 +21,7 @@ lifeos/  (repo root: Me-Assistant)
   apps/
     api/      NestJS backend  (@lifeos/api)
     web/      Next.js dashboard (@lifeos/web)
-    mobile/   Flutter + native Android notification listener (Phase 1)
+    mobile/   Flutter: Android notification listener, iOS email-paste fallback
   packages/
     shared/   @lifeos/shared — shared TS types + Zod schemas (auth DTOs, entities)
   docs/memory/
@@ -56,14 +56,16 @@ confirms category/time and the API reparses and atomically imports it. No mailbo
 provider permission is requested and raw text is not persisted. A keyed fingerprint
 of normalized text + confirmed time is unique per user/source; a nearby-amount
 warning does not automatically reconcile email with Android notifications.
-Provider-based mailbox ingestion and a full native iOS flow remain future work.
+Provider-based mailbox ingestion remains future work. The native iOS runner and
+manual paste/preview/confirmation UI now exist, but no signed-in iOS end-to-end
+flow or physical-device email handoff has been verified.
 
 ## Data models (Section 5 entity shape — expand fields as built)
 - `User` (auth, profile: height/weight/goals, role for RBAC)
 - `Transaction` → belongs_to `Category`, matched_by `UpiMapping`
-- `FoodLog` → references `FoodItem`
-- `WorkoutLog` → contains `ExerciseSet` → references `Exercise`
-- `Medication`, `Note`, `Reminder`, `Goal` (tagged short/long-term, linked to a module)
+- `LifeRecord` → typed `food`, `workout`, `medication`, `medication-intake`,
+  `note`, `reminder`, or `goal` payload, owned by a user. Catalog results are
+  not persisted as separate `FoodItem` or `Exercise` documents yet.
 
 ### Implemented so far (Phase 0 + Phase 1 slices)
 - `User` { email (unique), passwordHash, role, profile{}, timestamps }
@@ -74,9 +76,17 @@ Provider-based mailbox ingestion and a full native iOS flow remain future work.
   (userId, source, sourceEventId) index for replay-safe imports
 - `UpiMapping` { userId, upiHash, type, category } — per-user unique index; UPI IDs
   are HMAC-hashed using a domain-separated input and the existing JWT signing secret
+- `LifeRecord` { userId, kind, strict validated payload, occurredAt, timestamps }
+  — indexed by owner/kind/time. Medication intake references an owner-owned
+  medication; schedule/reminder definitions do **not** trigger OS alerts yet.
+- `McpToken` { userId, tokenHash, scopes, expiresAt, revokedAt } — opt-in;
+  separate from web JWT. `AiKey` { userId, provider, ciphertext, iv, authTag,
+  keyVersion } — unique owner/provider; AES-GCM with server-held encryption key.
 
-## AI layer build order (Phase 5+)
-1. **MCP server** first (tools: `get_transactions`, `log_workout`, `get_goal_progress`,
-   `add_note`, `get_food_log`, …) with its **own scoped-token auth** (not the web session).
-2. **Built-in assistant** reuses those same MCP tools as its tool-calling mechanism.
-3. **RAG only for Notes** (free text). Structured data uses precise tool calls, not embeddings.
+## AI layer (partial implementation)
+`ToolExecutionService` is reused by the scoped MCP endpoint and the built-in
+assistant's read-only data assembly; AI does **not** automatically call the
+published MCP protocol endpoint. Configured LangChain model providers run only
+after explicit consent. Notes currently use bounded recent text, not vector
+RAG; Bedrock/BYOK live provider behavior remains unverified. MCP OAuth discovery
+and token rate limiting still need production hardening.

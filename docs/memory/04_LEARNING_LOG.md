@@ -305,3 +305,97 @@ validation → Nest service → Mongoose collection → response. Name actual fi
 and functions, show one sample payload and stored document, distinguish JWT
 session proof from Google OIDC identity proof, compare alternatives and trade-offs,
 describe what changes at 100k users, and label unverified versus not built.
+
+## 2026-09-26 — Pending lesson: keyset history and UTC monthly aggregates (Phase 1)
+**Status:** pending lesson; implementation and tests do not count as teach-back.
+**Where:** `apps/api/src/transactions/transactions.service.ts`,
+`apps/web/src/components/FinancePanel.tsx`, `packages/shared/src/finance.ts`.
+**What/why here:** a 51-row query returns a page of 50 and an encoded last-row
+boundary; the next page is strictly older by timestamp then ID, never by
+numeric offset. A second MongoDB aggregate groups categorized payments by UTC
+calendar month using exact Decimal128 paise, then fills empty months for the UI.
+The backend gets `userId` from JWT on every read, not from a cursor.
+**Alternatives:** offset paging (simple but deep scans and shifting rows), full
+client download (unbounded payload), or precomputed monthly rollups (faster reads
+but complicated late-write corrections).
+**100k users:** review indexed query plans, enforce bounded page size, measure
+per-user aggregate latency and introduce rollups when supported by traffic.
+**Interview:** “Why sort by both occurredAt and ID?” Timestamps can tie, so a
+unique second key gives deterministic boundaries. Hands-on: create over 50
+payments, page through them, and compare the six-month chart with raw payments.
+
+## 2026-09-26 — Pending lesson: schema ObjectId versus runtime ObjectId
+**Status:** pending lesson; HTTP smoke found the mismatch and verified the fix.
+**Where:** `apps/api/src/transactions/schemas`, `apps/api/src/auth/schemas`.
+**What/why here:** `Schema.Types.ObjectId` tells Mongoose to cast/validate a
+stored owner ID; `new Types.ObjectId(id)` creates an ID value. Confusing them
+made `userId` Mixed, letting strings and BSON IDs form distinct index keys.
+**Alternatives:** manual conversion on every write, string-only ownership with
+a migration, or a proper schema ObjectId (chosen).
+**100k users:** audit field types and indexes across collections before scaling;
+mixed-type owner IDs fragment indexed access and complicate migrations.
+**Interview:** “Why do two equal-looking user IDs not match in MongoDB?” A
+string and BSON ObjectId have different storage types; typing the schema makes
+reads and writes consistent. Check with `TransactionSchema.path("userId").instance`.
+
+## 2026-09-26 — Pending lesson: multi-tenant records and goal aggregates
+**Status:** pending, not taught. Trace `LifeHub` → `/life/:kind` → Zod →
+`LifeService` → indexed MongoDB collection → safe response, then measure
+`/life/goals/progress` from owner data. Compare one typed collection, one per
+domain, and schema-less documents. At 100k users benchmark indexes and
+precompute expensive totals. Interview: how is another user's medication
+isolated? Answer: every read/write and referenced-ID lookup filters by the
+verified token's owner, never by a user ID supplied in the body.
+
+## 2026-09-26 — Pending lesson: catalog integrity and caching
+**Status:** pending, not taught. Trace USDA search, OFF barcode lookup and
+wger pagination; missing nutrients are null rather than invented zeros.
+Compare live external catalogs, hand-seeded data, and licensed providers;
+at 100k users add shared caching, upstream quotas and observability. Interview:
+why is missing nutrition null rather than 0? Zero incorrectly asserts absence.
+Camera scan and micronutrient rollups are not built.
+
+## 2026-09-26 — Pending lesson: MCP authorization, encryption, and grounded AI
+**Status:** pending, not taught. Trace `AiPanel` → `/ai/chat` consent →
+`AiService` → `ToolExecutionService` → owner-scoped data → model; compare
+`/mcp` and its separate scoped opaque bearer. Compare JWT reuse, opaque
+tokens, OAuth discovery; AES-GCM versus plaintext keys/KMS; structured
+lookups versus note vector RAG. At 100k users budget per tenant, add quotas,
+key rotation and retrieval evaluation. Interview: can a note instruct AI to
+leak another user's data? Never trust note text as instructions; enforce
+isolation at retrieval, not solely in a prompt. Adversarial tests are open.
+
+## 2026-09-26 — Pending lesson: Android/iOS platform boundaries
+**Status:** pending, not taught. Trace native Android notification channel
+versus iOS Flutter email review → confirmed timezone-aware import → server
+idempotency. Compare web-only fallback, native shell and consented mailbox
+integration. At 100k users plan private resumable outboxes and cross-source
+deduplication. Interview: why doesn't simulator launch imply store readiness?
+It doesn't validate real payment apps, consent, production connectivity,
+signing, privacy disclosures or App Store approval.
+
+## 2026-09-26 — Pending lesson: CI boundaries
+**Status:** pending, not taught. Trace `.github/workflows/ci.yml` from PR
+to checkout, pinned dependencies, builds, tests and failing status. Compare
+manual checks, build-only CI and ephemeral DB integration tests. At 100k
+users use parallel matrices, isolated credentials and guarded deploys.
+Interview: why not use production Atlas secrets on untrusted PRs? The
+change author can exfiltrate them; use a throwaway database instead.
+
+## 2026-09-26 — Pending lesson: full-history nutrition aggregates
+**Status:** pending, not taught. Trace a food save through validation and
+storage, then `/life/food/summary` through owner/time matching and nutrient
+grouping. Contrast counting only displayed logs, downloading all records,
+and database aggregation. At 100k users check the owner/kind/time index and
+consider correction-aware daily rollups. Interview: why doesn't the latest
+100 foods represent a 30-day total? Pagination is a display bound, not the
+full set; summarize against all matching owner records instead.
+
+## 2026-09-26 — Pending lesson: workout set aggregation
+**Status:** pending, not taught. Trace logged sets through
+`/life/workout/stats` `$unwind`, `$group`, `$sort` and the bounded response;
+two sets of 8×20kg and 5×30kg = 310kg volume, 30kg heaviest logged weight.
+Compare recent client sums, server aggregation and precomputed metrics;
+at 100k users normalize exercise IDs and add dated rollups. Interview:
+why not call 30kg a verified personal record? The app only knows the
+history users logged here; it cannot attest to lifetime history.

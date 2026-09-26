@@ -53,6 +53,12 @@ export interface PendingNotification {
 
 export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
 
+export const transactionListQuerySchema = z.strictObject({
+  cursor: z.string().min(1).max(256).regex(/^[A-Za-z0-9_-]+$/).optional(),
+});
+
+export type TransactionListQuery = z.infer<typeof transactionListQuerySchema>;
+
 export interface PublicTransaction extends CreateTransactionDto {
   id: string;
   currency: "INR";
@@ -66,4 +72,13 @@ export interface FinanceSummary {
   expenseMinor: number;
   incomeMinor: number;
   expenseByCategory: { category: CreateTransactionDto["category"]; amountMinor: number }[];
+}
+
+export interface TransactionPage {
+  transactions: PublicTransaction[];
+  nextCursor: string | null;
+}
+
+export interface FinanceTrend {
+  months: { month: string; expenseMinor: number; incomeMinor: number }[];
 }

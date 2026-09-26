@@ -15,5 +15,6 @@ import { TransactionsService } from "./transactions.service";
   ])],
   controllers: [TransactionsController],
   providers: [TransactionsService, JwtAuthGuard],
+  exports: [TransactionsService],
 })
 export class TransactionsModule {}
